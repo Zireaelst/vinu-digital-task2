@@ -6,14 +6,15 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "deploy": "hardhat run scripts/deploy.ts --network sepolia",
-    "verify": "hardhat run scripts/verify.ts --network sepolia",
-    "demo": "hardhat run scripts/demo-execute-transfer.ts --network sepolia",
-    "debug": "hardhat run scripts/debug.ts --network sepolia",
-    "fix": "hardhat run scripts/fix-setup.ts --network sepolia",
-    "simple-demo": "hardhat run scripts/simple-demo.ts --network sepolia",
-    "analyze": "hardhat run scripts/contract-analysis.ts --network sepolia",
-    "diagnose": "hardhat run scripts/diagnose.ts --network sepolia"
+    "test:unit": "hardhat test",
+    "test:token": "hardhat test test/TestToken.test.ts",
+    "test:paymaster": "hardhat test test/SponsorPaymaster.test.ts",
+    "deploy": "hardhat run scripts/deployment/deploy.ts --network sepolia",
+    "setup": "hardhat run scripts/deployment/setup.ts --network sepolia",
+    "verify": "hardhat run scripts/deployment/verify.ts --network sepolia",
+    "demo:simple": "hardhat run scripts/demos/simple-sponsored-transfer.ts --network sepolia",
+    "demo:full": "hardhat run scripts/demos/demo-with-simpleaccount.ts --network sepolia",
+    "demo:basic": "hardhat run scripts/demos/simple-demo.ts --network sepolia"
   },
   "keywords": [
     "erc4337",
