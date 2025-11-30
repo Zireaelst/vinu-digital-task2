@@ -1,0 +1,41 @@
+{
+  "name": "vinu-digital-task2-contracts",
+  "version": "1.0.0",
+  "description": "ERC-4337 Account Abstraction Meta Transaction Sponsorship - Smart Contracts",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.ts --network sepolia",
+    "verify": "hardhat run scripts/verify.ts --network sepolia",
+    "demo": "hardhat run scripts/demo-execute-transfer.ts --network sepolia",
+    "debug": "hardhat run scripts/debug.ts --network sepolia",
+    "fix": "hardhat run scripts/fix-setup.ts --network sepolia",
+    "simple-demo": "hardhat run scripts/simple-demo.ts --network sepolia",
+    "analyze": "hardhat run scripts/contract-analysis.ts --network sepolia",
+    "diagnose": "hardhat run scripts/diagnose.ts --network sepolia"
+  },
+  "keywords": [
+    "erc4337",
+    "account-abstraction",
+    "paymaster",
+    "ethereum",
+    "hardhat"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "hardhat": "^2.22.17",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@typechain/hardhat": "^9.1.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "ethers": "^6.10.0",
+    "@account-abstraction/contracts": "^0.6.0",
+    "@openzeppelin/contracts": "^4.9.3",
+    "dotenv": "^16.3.0",
+    "chalk": "^4.1.2"
+  }
+}
