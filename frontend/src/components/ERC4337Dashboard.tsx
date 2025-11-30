@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import ContractInfo from './ContractInfo';
 import SponsoredTransfer from './SponsoredTransfer';
 import WalletConnection from './WalletConnection';
+import TransactionHistory from './TransactionHistory';
+import GasTracker from './GasTracker';
 
 interface DashboardStats {
   connectedWallet: string | null;
@@ -20,7 +22,7 @@ export default function ERC4337Dashboard() {
     gasPriceGwei: null
   });
 
-  const [activeTab, setActiveTab] = useState<'contracts' | 'transfer'>('contracts');
+  const [activeTab, setActiveTab] = useState<'contracts' | 'transfer' | 'history' | 'gas'>('contracts');
 
   useEffect(() => {
     // Simulate some network stats
@@ -72,26 +74,46 @@ export default function ERC4337Dashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Navigation Tabs */}
         <div className="mb-8">
-          <nav className="flex space-x-1 bg-gray-800 rounded-lg p-1">
+          <nav className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-gray-800 rounded-lg p-1">
             <button
               onClick={() => setActiveTab('contracts')}
-              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 activeTab === 'contracts'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
             >
-              📋 Kontrat Bilgileri
+              📋 Contracts
             </button>
             <button
               onClick={() => setActiveTab('transfer')}
-              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 activeTab === 'transfer'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
             >
-              💸 Sponsorlu Transfer
+              💸 Transfer
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'history'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              📊 History
+            </button>
+            <button
+              onClick={() => setActiveTab('gas')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'gas'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              ⛽ Gas Tracker
             </button>
           </nav>
         </div>
@@ -164,18 +186,18 @@ export default function ERC4337Dashboard() {
           {activeTab === 'transfer' && (
             <div className="space-y-6">
               <SponsoredTransfer />
-              
-              {/* Transaction History Placeholder */}
-              <div className="bg-gray-800 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-white mb-4">📈 Recent Activity</h3>
-                <div className="text-center py-8">
-                  <div className="text-gray-400 text-4xl mb-2">📊</div>
-                  <p className="text-gray-400">No transactions yet</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Execute a sponsored transfer to see activity here
-                  </p>
-                </div>
-              </div>
+            </div>
+          )}
+
+          {activeTab === 'history' && (
+            <div className="bg-gray-800 rounded-lg p-6">
+              <TransactionHistory />
+            </div>
+          )}
+
+          {activeTab === 'gas' && (
+            <div>
+              <GasTracker />
             </div>
           )}
         </div>
