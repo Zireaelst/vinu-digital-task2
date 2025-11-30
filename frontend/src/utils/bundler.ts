@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES, SEPOLIA_RPC_URL } from '@/config/wagmi';
+import { getAllBundlerEndpoints } from '@/config/bundler';
 
 export interface UserOperation {
   sender: string;
@@ -36,12 +37,8 @@ export interface UserOperationReceipt {
   };
 }
 
-// Bundler endpoints (reliable working ones)
-const BUNDLER_ENDPOINTS = [
-  'https://api.stackup.sh/v1/node/ethereum-sepolia',
-  'https://node.stackup.sh/v1/rpc/11155111',  
-  'https://sepolia.voltaire.candidewallet.com/rpc',
-];
+// Get bundler endpoints from configuration
+const BUNDLER_ENDPOINTS = getAllBundlerEndpoints();
 
 // Create ethers provider for Sepolia
 export const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC_URL);
@@ -226,9 +223,9 @@ export async function executeTokenTransfer(
     nonce: '0x' + nonce.toString(16),
     initCode: '0x',
     callData: executeData,
-    callGasLimit: '0x' + (200000).toString(16), // Initial estimate
-    verificationGasLimit: '0x' + (400000).toString(16), // Initial estimate
-    preVerificationGas: '0x' + (50000).toString(16), // Initial estimate
+    callGasLimit: '0x30d40', // 200000 in hex with 0x prefix
+    verificationGasLimit: '0x61a80', // 400000 in hex
+    preVerificationGas: '0xc350', // 50000 in hex
     maxFeePerGas: '0x' + maxFeePerGas.toString(16),
     maxPriorityFeePerGas: '0x' + maxPriorityFeePerGas.toString(16),
     paymasterAndData: CONTRACT_ADDRESSES.sponsorPaymaster,
@@ -240,16 +237,23 @@ export async function executeTokenTransfer(
     console.log('🔍 Estimating gas...');
     const gasEstimate = await bundlerClient.estimateUserOperationGas(userOp, CONTRACT_ADDRESSES.entryPoint);
     
-    userOp.callGasLimit = gasEstimate.callGasLimit;
-    userOp.verificationGasLimit = gasEstimate.verificationGasLimit;
-    userOp.preVerificationGas = gasEstimate.preVerificationGas;
+    // Ensure hex format with 0x prefix
+    userOp.callGasLimit = typeof gasEstimate.callGasLimit === 'string' && gasEstimate.callGasLimit.startsWith('0x') 
+      ? gasEstimate.callGasLimit 
+      : '0x' + BigInt(gasEstimate.callGasLimit).toString(16);
+    
+    userOp.verificationGasLimit = typeof gasEstimate.verificationGasLimit === 'string' && gasEstimate.verificationGasLimit.startsWith('0x')
+      ? gasEstimate.verificationGasLimit
+      : '0x' + BigInt(gasEstimate.verificationGasLimit).toString(16);
+    
+    userOp.preVerificationGas = typeof gasEstimate.preVerificationGas === 'string' && gasEstimate.preVerificationGas.startsWith('0x')
+      ? gasEstimate.preVerificationGas
+      : '0x' + BigInt(gasEstimate.preVerificationGas).toString(16);
     
     console.log('✅ Gas estimation successful:', gasEstimate);
   } catch (error) {
     console.warn('⚠️ Gas estimation failed, using default values:', error);
-    userOp.callGasLimit = '200000';
-    userOp.verificationGasLimit = '300000';
-    userOp.preVerificationGas = '50000';
+    // Keep the hex values already set
   }
   
   // Sign UserOp
@@ -257,17 +261,18 @@ export async function executeTokenTransfer(
   const userOpHash = await entryPoint.getUserOpHash(userOp);
   const wallet = new ethers.Wallet(privateKey, provider);
   
-  // Use direct hash signing for SimpleAccount (not message signing)
-  const signature = await wallet.signingKey.sign(userOpHash);
-  const serializedSignature = ethers.Signature.from(signature).serialized;
+  // SimpleAccount expects EIP-191 message signature
+  // Convert hash to bytes and sign as message
+  const messageBytes = ethers.getBytes(userOpHash);
+  const signature = await wallet.signMessage(messageBytes);
   
   console.log('🔍 Signature details:', {
     userOpHash,
-    signatureLength: serializedSignature.length,
+    signatureLength: signature.length,
     signer: wallet.address
   });
   
-  userOp.signature = serializedSignature;
+  userOp.signature = signature;
   
   console.log('📤 Sending UserOperation to bundler...');
   console.log('UserOp details:', {
@@ -338,19 +343,20 @@ export async function buildTokenTransferUserOp(
     nonce: '0x' + nonce.toString(16),
     initCode: '0x',
     callData: executeData,
-    callGasLimit: '0x' + (200000).toString(16),
-    verificationGasLimit: '0x' + (400000).toString(16),
-    preVerificationGas: '0x' + (50000).toString(16),
+    callGasLimit: '0x30d40', // 200000 in hex
+    verificationGasLimit: '0x61a80', // 400000 in hex
+    preVerificationGas: '0xc350', // 50000 in hex
     maxFeePerGas: '0x' + maxFeePerGas.toString(16),
     maxPriorityFeePerGas: '0x' + maxPriorityFeePerGas.toString(16),
     paymasterAndData: CONTRACT_ADDRESSES.sponsorPaymaster,
     signature: '0x'
   };
   
-  // Sign UserOp
+  // Sign UserOp with EIP-191 message signature
   const userOpHash = await entryPoint.getUserOpHash(userOp);
   const wallet = new ethers.Wallet(privateKey);
-  const signature = await wallet.signMessage(ethers.getBytes(userOpHash));
+  const messageBytes = ethers.getBytes(userOpHash);
+  const signature = await wallet.signMessage(messageBytes);
   userOp.signature = signature;
   
   return userOp;
