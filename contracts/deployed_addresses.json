@@ -1,0 +1,10 @@
+{
+  "entryPoint": "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789",
+  "simpleAccountFactory": "0x9C12C19B00cAA9c7c23383F399924d26A0E06fDc",
+  "sponsorPaymaster": "0x61d222f1e0386a7Af71C865fF83Ad4CEd1131011",
+  "testToken": "0xab230E033D846Add5367Eb48BdCC4928259239a8",
+  "deployedAt": "2025-11-29T23:30:01.109Z",
+  "network": "sepolia",
+  "deployer": "0x6602130E170195670407CeE93932C1B0b9454aDD",
+  "factoryFixedAt": "2025-11-29T23:44:25.545Z"
+}
