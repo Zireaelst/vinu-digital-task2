@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import ContractInfo from './ContractInfo';
 import SponsoredTransfer from './SponsoredTransfer';
 import WalletConnection from './WalletConnection';
@@ -48,10 +49,10 @@ export default function ERC4337Dashboard() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-linear-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold">🚀</span>
                 </div>
-                <h1 className="text-xl font-bold">ERC-4337 Demo</h1>
+                <h1 className="text-xl font-bold">ERC-4337 Dashboard</h1>
               </div>
               <div className="hidden md:flex items-center space-x-6">
                 <span className="text-sm text-gray-300">Network: {stats.networkName}</span>
@@ -65,6 +66,11 @@ export default function ERC4337Dashboard() {
             </div>
             
             <div className="flex items-center space-x-4">
+              <Link href="/">
+                <button className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors">
+                  ← Back to Home
+                </button>
+              </Link>
               <WalletConnection />
             </div>
           </div>
@@ -121,7 +127,7 @@ export default function ERC4337Dashboard() {
         {/* Main Content */}
         <div className="grid grid-cols-1 gap-8">
           {/* ERC-4337 Overview Card */}
-          <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-lg p-6">
+          <div className="bg-linear-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-lg p-6">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-white mb-2">Account Abstraction (ERC-4337)</h2>

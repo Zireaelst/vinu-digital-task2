@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { motion } from "framer-motion";
-import { Send, Wallet, Zap, Shield, CheckCircle2 } from "lucide-react";
+import { Send, Wallet, Zap, Shield, CheckCircle2, Activity, BarChart3, History } from "lucide-react";
 
 import { Spotlight } from "@/components/ui/Spotlight";
 import { BackgroundBeams } from "@/components/ui/BackgroundBeams";
 import { HoverBorderGradient } from "@/components/ui/HoverBorderGradient";
 import { Input } from "@/components/ui/Input";
 import WalletConnection from "@/components/WalletConnection";
+import ContractInfo from "@/components/ContractInfo";
+import TransactionHistory from "@/components/TransactionHistory";
+import GasTracker from "@/components/GasTracker";
 import { executeTokenTransfer, formatAddress, isValidAddress, isValidAmount } from "@/utils/bundler";
 import { DEMO_PRIVATE_KEY, DEMO_ACCOUNT_ADDRESS } from "@/config/wagmi";
 
@@ -32,6 +35,8 @@ export default function Home() {
     error: "",
     txHash: "",
   });
+  
+  const [activeTab, setActiveTab] = useState<'contracts' | 'history' | 'gas'>('contracts');
 
   const handleInputChange = (field: keyof TransferState, value: string) => {
     setState((prev) => ({
@@ -392,9 +397,107 @@ export default function Home() {
           )}
         </motion.div>
 
+        {/* Dashboard Section */}
+        <motion.div 
+          className="mt-16 mb-8"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+        >
+          {/* Section Header */}
+          <div className="text-center mb-12">
+            <motion.h2 
+              className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-linear-to-r from-blue-400 via-purple-400 to-pink-400"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              Dashboard & Analytics
+            </motion.h2>
+            <motion.p 
+              className="text-zinc-400 text-lg"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              Monitor your smart account activity and gas metrics
+            </motion.p>
+          </div>
+
+          {/* Tab Navigation */}
+          <motion.div 
+            className="glass-card rounded-2xl p-2 mb-8 inline-flex w-full md:w-auto mx-auto"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <div className="grid grid-cols-3 gap-2 w-full">
+              <button
+                onClick={() => setActiveTab('contracts')}
+                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                  activeTab === 'contracts'
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                <span>Contracts</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                  activeTab === 'history'
+                    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Activity className="w-4 h-4" />
+                <span>History</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('gas')}
+                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                  activeTab === 'gas'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Zap className="w-4 h-4" />
+                <span>Gas Tracker</span>
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Tab Content */}
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            {activeTab === 'contracts' && (
+              <div className="glass-card rounded-3xl p-8">
+                <ContractInfo accountAddress={DEMO_ACCOUNT_ADDRESS} />
+              </div>
+            )}
+
+            {activeTab === 'history' && (
+              <div className="glass-card rounded-3xl p-8">
+                <TransactionHistory />
+              </div>
+            )}
+
+            {activeTab === 'gas' && (
+              <div>
+                <GasTracker />
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+
         {/* Footer */}
         <motion.div 
-          className="text-center text-zinc-500 text-sm"
+          className="text-center text-zinc-500 text-sm mt-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1 }}
