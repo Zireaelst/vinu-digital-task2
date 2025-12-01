@@ -17,12 +17,60 @@ interface Transaction {
   tokenSymbol?: string;
 }
 
+// Local storage key for transactions
+const STORAGE_KEY = 'erc4337_transaction_history';
+
+// Load transactions from localStorage
+const loadStoredTransactions = (): Transaction[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Save transactions to localStorage
+const saveTransactions = (txs: Transaction[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    // Keep only last 50 transactions to avoid storage bloat
+    const recent = txs.slice(0, 50);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(recent));
+  } catch (error) {
+    console.warn('Failed to save transactions to localStorage:', error);
+  }
+};
+
+// Merge new transactions with stored ones (avoid duplicates)
+const mergeTransactions = (stored: Transaction[], fetched: Transaction[]): Transaction[] => {
+  const txMap = new Map<string, Transaction>();
+  
+  // Add stored transactions
+  stored.forEach(tx => txMap.set(tx.hash, tx));
+  
+  // Add/update with fetched transactions (they have latest data)
+  fetched.forEach(tx => txMap.set(tx.hash, tx));
+  
+  // Convert back to array and sort by timestamp (most recent first)
+  return Array.from(txMap.values()).sort((a, b) => b.timestamp - a.timestamp);
+};
+
 export default function TransactionHistory() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // Load stored transactions immediately
+    const stored = loadStoredTransactions();
+    if (stored.length > 0) {
+      setTransactions(stored);
+      setLoading(false);
+    }
+    
+    // Then fetch latest
     fetchTransactionHistory();
   }, []);
 
@@ -83,10 +131,26 @@ export default function TransactionHistory() {
         })
       );
 
-      setTransactions(txs.reverse()); // Most recent first
+      const recentTxs = txs.reverse(); // Most recent first
+      
+      // Merge with stored transactions
+      const storedTxs = loadStoredTransactions();
+      const mergedTxs = mergeTransactions(storedTxs, recentTxs);
+      
+      // Update state and save to localStorage
+      setTransactions(mergedTxs);
+      saveTransactions(mergedTxs);
+      
+      console.log(`💾 Saved ${mergedTxs.length} transactions (${recentTxs.length} new, ${storedTxs.length} stored)`);
     } catch (err) {
       console.error('Error fetching transactions:', err);
       setError('Failed to load transaction history');
+      
+      // Still show stored transactions on error
+      const stored = loadStoredTransactions();
+      if (stored.length > 0) {
+        setTransactions(stored);
+      }
     } finally {
       setLoading(false);
     }

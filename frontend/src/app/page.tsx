@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { motion } from "framer-motion";
-import { Send, Wallet, Zap, Shield, CheckCircle2, Activity, BarChart3, History } from "lucide-react";
+import { Send, Wallet, Zap, Shield, CheckCircle2, Activity } from "lucide-react";
 
 import { Spotlight } from "@/components/ui/Spotlight";
 import { BackgroundBeams } from "@/components/ui/BackgroundBeams";
@@ -37,6 +37,7 @@ export default function Home() {
   });
   
   const [activeTab, setActiveTab] = useState<'contracts' | 'history' | 'gas'>('contracts');
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0); // Force re-render of TransactionHistory
 
   const handleInputChange = (field: keyof TransferState, value: string) => {
     setState((prev) => ({
@@ -103,6 +104,9 @@ export default function Home() {
         success: true,
         txHash: result.receipt.receipt.transactionHash,
       }));
+
+      // Refresh transaction history
+      setHistoryRefreshKey(prev => prev + 1);
 
       console.log('🎉 Meta Transaction Successful!', {
         userOpHash: result.userOpHash,
@@ -483,7 +487,7 @@ export default function Home() {
 
             {activeTab === 'history' && (
               <div className="glass-card rounded-3xl p-8">
-                <TransactionHistory />
+                <TransactionHistory key={historyRefreshKey} />
               </div>
             )}
 
