@@ -27,30 +27,10 @@ export const SEPOLIA_CHAIN_ID = 11155111;
 
 /**
  * Available bundler endpoints
- * Ordered by reliability and preference
+ * Using dedicated API keys for reliable execution
  */
 export const BUNDLER_CONFIGS: BundlerConfig[] = [
-  {
-    name: 'Pimlico Public',
-    endpoint: 'https://api.pimlico.io/v2/sepolia/rpc?apikey=public',
-    requiresApiKey: false,
-    isPublic: true,
-    chainId: SEPOLIA_CHAIN_ID,
-  },
-  {
-    name: 'Biconomy',
-    endpoint: 'https://bundler.biconomy.io/api/v2/11155111/nJPK7B3ru.dd7f7861-190d-41bd-af80-6877f74b8f44',
-    requiresApiKey: false,
-    isPublic: true,
-    chainId: SEPOLIA_CHAIN_ID,
-  },
-  {
-    name: 'Candide Voltaire',
-    endpoint: 'https://sepolia.voltaire.candidewallet.com/rpc',
-    requiresApiKey: false,
-    isPublic: true,
-    chainId: SEPOLIA_CHAIN_ID,
-  },
+  // No public bundlers - all using API keys for reliability
 ];
 
 /**
@@ -68,31 +48,49 @@ export function getBundlerConfig(name: string): BundlerConfig | undefined {
 }
 
 /**
- * Environment variable for custom bundler API key
- * Set NEXT_PUBLIC_BUNDLER_API_KEY in .env.local for production
+ * Get bundler endpoints with API keys
+ * Using Pimlico and Alchemy for reliable execution
  */
-export function getCustomBundlerEndpoint(): string | null {
-  const apiKey = process.env.NEXT_PUBLIC_BUNDLER_API_KEY;
+export function getCustomBundlerEndpoints(): string[] {
+  const endpoints: string[] = [];
   
-  if (!apiKey) {
-    return null;
+  // Pimlico - Primary bundler (best for ERC-4337 + paymaster)
+  const pimlicoKey = process.env.NEXT_PUBLIC_PIMLICO_API_KEY;
+  if (pimlicoKey) {
+    endpoints.push(`https://api.pimlico.io/v2/sepolia/rpc?apikey=${pimlicoKey}`);
   }
   
-  // Stackup with custom API key
-  return `https://api.stackup.sh/v1/node/${SEPOLIA_CHAIN_ID}/${apiKey}`;
-}
-
-/**
- * Get all available bundler endpoints including custom ones
- */
-export function getAllBundlerEndpoints(): string[] {
-  const endpoints = getBundlerEndpoints();
-  const customEndpoint = getCustomBundlerEndpoint();
-  
-  if (customEndpoint) {
-    // Prioritize custom endpoint
-    return [customEndpoint, ...endpoints];
+  // Alchemy - Secondary bundler
+  const alchemyKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
+  if (alchemyKey) {
+    endpoints.push(`https://eth-sepolia.g.alchemy.com/v2/${alchemyKey}`);
   }
   
   return endpoints;
+}
+
+/**
+ * Legacy function for backward compatibility
+ */
+export function getCustomBundlerEndpoint(): string | null {
+  const endpoints = getCustomBundlerEndpoints();
+  return endpoints.length > 0 ? endpoints[0] : null;
+}
+
+/**
+ * Get all available bundler endpoints
+ * Uses only API key endpoints for reliability
+ */
+export function getAllBundlerEndpoints(): string[] {
+  const customEndpoints = getCustomBundlerEndpoints();
+  
+  if (customEndpoints.length === 0) {
+    console.warn('⚠️ No bundler API keys configured! Add to .env.local:');
+    console.warn('   NEXT_PUBLIC_PIMLICO_API_KEY=your_key');
+    console.warn('   NEXT_PUBLIC_ALCHEMY_API_KEY=your_key');
+    throw new Error('No bundler API keys configured. Please check .env.local');
+  }
+  
+  console.log(`✅ Using ${customEndpoints.length} bundler endpoint(s) with API keys`);
+  return customEndpoints;
 }

@@ -22,4 +22,7 @@ export const DEMO_ACCOUNT_ADDRESS = '0xe6C10E95f8AEF841e766018Cd08944602Bc7EFC2'
 // Private key for the SimpleAccount owner (sponsor wallet - for demo purposes only)
 export const DEMO_PRIVATE_KEY = '0xf940ad78f04aee09ea25f8233fb4919f787cd302c215644e7084d194a0459322';
 
-export const SEPOLIA_RPC_URL = 'https://eth-sepolia.g.alchemy.com/v2/TOesvxt49zaYfum1kkgS6';
+// Use Alchemy API key from environment or fallback to hardcoded
+export const SEPOLIA_RPC_URL = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY 
+  ? `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`
+  : 'https://eth-sepolia.g.alchemy.com/v2/TOesvxt49zaYfum1kkgS6';
