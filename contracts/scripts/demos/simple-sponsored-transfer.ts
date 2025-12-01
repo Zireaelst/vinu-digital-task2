@@ -1,7 +1,9 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
 import { readFileSync } from "fs";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
+
+const { ethers } = hre;
 
 dotenv.config();
 

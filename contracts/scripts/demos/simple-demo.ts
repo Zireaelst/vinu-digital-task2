@@ -1,6 +1,8 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
 import { readFileSync } from "fs";
 import chalk from "chalk";
+
+const { ethers } = hre;
 
 async function main() {
   console.log(chalk.blue("🎯 ERC-4337 Sponsored Transfer Demo (Simplified)"));
