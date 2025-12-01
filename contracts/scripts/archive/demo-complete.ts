@@ -1,4 +1,5 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
+const { ethers } = hre;
 
 async function demonstrateMetaTx() {
   console.log("🚀 Starting ERC-4337 Meta Transaction Demonstration");

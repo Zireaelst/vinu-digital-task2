@@ -93,14 +93,25 @@ export default function GasTracker() {
         provider
       );
       
-      // Get transfers FROM the SimpleAccount (sponsored transactions)
-      const transferFilter = testTokenContract.filters.Transfer(DEMO_ACCOUNT_ADDRESS, null);
-      const transferEvents = await testTokenContract.queryFilter(transferFilter, fromBlock, currentBlock);
+      // Get ALL transfers (both SimpleAccount and direct wallet)
+      // This catches fallback direct transfers when bundler fails
+      const allTransfersFilter = testTokenContract.filters.Transfer(null, null);
+      const allTransfers = await testTokenContract.queryFilter(allTransfersFilter, fromBlock, currentBlock);
       
-      console.log('Transfer events found:', transferEvents.length); // Debug log
+      // Filter for transfers FROM SimpleAccount OR related to our wallet
+      const relevantTransfers = allTransfers.filter(event => {
+        const eventLog = event as ethers.EventLog;
+        if (!eventLog.args) return false;
+        const from = eventLog.args[0]?.toString().toLowerCase();
+        const to = eventLog.args[1]?.toString().toLowerCase();
+        return from === DEMO_ACCOUNT_ADDRESS.toLowerCase() || 
+               to === DEMO_ACCOUNT_ADDRESS.toLowerCase();
+      });
+      
+      console.log('Transfer events found:', relevantTransfers.length, 'out of', allTransfers.length, 'total'); // Debug log
       
       // Also check for Paymaster PostOp events to get accurate sponsored tx count
-      let sponsoredTxCount = transferEvents.length;
+      let sponsoredTxCount = relevantTransfers.length;
       
       try {
         const paymasterContract = new ethers.Contract(
@@ -216,7 +227,7 @@ export default function GasTracker() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard
           title="Current Gas Price"
-          value={parseFloat(stats.currentGasPriceGwei).toFixed(2)}
+          value={parseFloat(stats.currentGasPriceGwei).toFixed(6)}
           unit="gwei"
           icon={Fuel}
           iconColor="text-blue-400"

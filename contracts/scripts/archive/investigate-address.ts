@@ -1,4 +1,5 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
+const { ethers } = hre;
 
 async function main() {
   const address = "0x9C12C19B00cAA9c7c23383F399924d26A0E06fDc";

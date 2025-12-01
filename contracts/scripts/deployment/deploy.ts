@@ -1,9 +1,11 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
 import { writeFileSync } from "fs";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
 
 dotenv.config();
+
+const { ethers } = hre;
 
 // Known EntryPoint address on Sepolia
 const ENTRYPOINT_ADDRESS = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789";
@@ -58,7 +60,7 @@ async function main() {
   const SimpleAccountFactory = await ethers.getContractFactory("SimpleAccountFactory");
   const simpleAccountFactory = await SimpleAccountFactory.deploy(ENTRYPOINT_ADDRESS);
   await simpleAccountFactory.waitForDeployment();
-  const factoryAddress = await simpleAccountFactory.getAddress();
+  const factoryAddress = simpleAccountFactory.target as string;
   console.log(chalk.green(`✅ SimpleAccountFactory deployed to: ${factoryAddress}`));
   
   // 3. Deploy SponsorPaymaster
@@ -84,7 +86,7 @@ async function main() {
   
   // Create a test account address for whitelisting
   const testUserWallet = ethers.Wallet.createRandom();
-  const testAccountAddress = await simpleAccountFactory.getAddress(testUserWallet.address, 0);
+  const testAccountAddress = await simpleAccountFactory.getFunction("getAddress").staticCall(testUserWallet.address, 0);
   
   // Whitelist the test account
   console.log(chalk.cyan("🏷️  Whitelisting test account..."));

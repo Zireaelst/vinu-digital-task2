@@ -45,24 +45,39 @@ export default function TransactionHistory() {
         provider
       );
 
-      const filter = testTokenContract.filters.Transfer(simpleAccountAddress, null);
-      const events = await testTokenContract.queryFilter(filter, fromBlock, currentBlock);
+      // Get ALL transfers and filter for SimpleAccount related ones
+      // This catches both direct transfers and SimpleAccount transactions
+      const allTransfersFilter = testTokenContract.filters.Transfer(null, null);
+      const allEvents = await testTokenContract.queryFilter(allTransfersFilter, fromBlock, currentBlock);
+      
+      // Filter for transactions involving SimpleAccount
+      const events = allEvents.filter(event => {
+        const eventLog = event as ethers.EventLog;
+        if (!eventLog.args) return false;
+        const from = eventLog.args[0]?.toString().toLowerCase();
+        const to = eventLog.args[1]?.toString().toLowerCase();
+        return from === simpleAccountAddress.toLowerCase() || 
+               to === simpleAccountAddress.toLowerCase();
+      });
+
+      console.log('Found', events.length, 'transactions involving SimpleAccount');
 
       const txs: Transaction[] = await Promise.all(
         events.map(async (event) => {
+          const eventLog = event as ethers.EventLog;
           const tx = await event.getTransaction();
           const receipt = await event.getTransactionReceipt();
           const block = await provider.getBlock(tx.blockNumber!);
 
           return {
             hash: tx.hash,
-            from: simpleAccountAddress,
-            to: event.args![1] as string,
-            value: ethers.formatEther(event.args![2] as bigint),
+            from: eventLog.args[0] as string,
+            to: eventLog.args[1] as string,
+            value: ethers.formatEther(eventLog.args[2] as bigint),
             gasUsed: receipt!.gasUsed.toString(),
             timestamp: block!.timestamp,
             status: receipt!.status === 1 ? 'success' : 'failed',
-            tokenAmount: ethers.formatEther(event.args![2] as bigint),
+            tokenAmount: ethers.formatEther(eventLog.args[2] as bigint),
             tokenSymbol: 'TEST',
           };
         })

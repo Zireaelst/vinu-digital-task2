@@ -218,6 +218,9 @@ export async function executeTokenTransfer(
   });
   
   // Build initial UserOp (for gas estimation)
+  // Note: paymasterAndData left empty - paymaster sponsorship requires additional
+  // signature from paymaster which is complex to implement client-side
+  // For production, paymaster would sign on backend
   const userOp: UserOperation = {
     sender: accountAddress,
     nonce: '0x' + nonce.toString(16),
@@ -228,7 +231,7 @@ export async function executeTokenTransfer(
     preVerificationGas: '0xc350', // 50000 in hex
     maxFeePerGas: '0x' + maxFeePerGas.toString(16),
     maxPriorityFeePerGas: '0x' + maxPriorityFeePerGas.toString(16),
-    paymasterAndData: CONTRACT_ADDRESSES.sponsorPaymaster,
+    paymasterAndData: '0x', // Empty - no paymaster sponsorship for now
     signature: '0x'
   };
 

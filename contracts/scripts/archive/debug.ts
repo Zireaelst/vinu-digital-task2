@@ -1,6 +1,8 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
 import { readFileSync } from "fs";
 import chalk from "chalk";
+
+const { ethers } = hre;
 
 async function main() {
   console.log(chalk.blue("🔍 Debugging ERC-4337 UserOp..."));

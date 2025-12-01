@@ -1,4 +1,5 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
+const { ethers } = hre;
 
 async function verifyKeys() {
   console.log("🔑 Verifying private keys and addresses...");

@@ -1,4 +1,5 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
+const { ethers } = hre;
 
 async function main() {
   const factoryAddress = "0x9C12C19B00cAA9c7c23383F399924d26A0E06fDc";
@@ -16,7 +17,7 @@ async function main() {
   
   try {
     // Get account address
-    const accountAddress = await factory.getAddress(walletAddress, salt);
+    const accountAddress = await factory.getFunction("getAddress").staticCall(walletAddress, salt);
     console.log("✅ Predicted SimpleAccount address:", accountAddress);
     
     // Check if account exists

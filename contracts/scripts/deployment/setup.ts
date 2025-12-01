@@ -1,6 +1,8 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
 import { writeFileSync } from "fs";
 import chalk from "chalk";
+
+const { ethers } = hre;
 
 // Manually set the deployed addresses from the console output
 const deployedAddresses = {

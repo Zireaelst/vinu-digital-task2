@@ -1,4 +1,5 @@
-import { ethers } from "hardhat";
+import hre from "hardhat";
+const { ethers } = hre;
 import { readFileSync } from "fs";
 import chalk from "chalk";
 
