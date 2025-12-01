@@ -57,6 +57,7 @@ export class BundlerClient {
       try {
         const endpoint = this.endpoints[this.currentEndpointIndex];
         console.log(`🔄 Trying bundler endpoint: ${endpoint}`);
+        console.log(`📤 Method: ${method}`, params);
         
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -71,16 +72,19 @@ export class BundlerClient {
           }),
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
         const result = await response.json();
         
+        if (!response.ok) {
+          console.error(`❌ HTTP ${response.status}:`, result);
+          throw new Error(`HTTP ${response.status}: ${result.error?.message || response.statusText}`);
+        }
+        
         if (result.error) {
-          throw new Error(result.error.message || 'RPC Error');
+          console.error('❌ RPC Error:', result.error);
+          throw new Error(result.error.message || JSON.stringify(result.error));
         }
 
+        console.log('✅ Response:', result.result);
         return result.result;
       } catch (error) {
         console.warn(`❌ Bundler endpoint failed: ${this.endpoints[this.currentEndpointIndex]}`, error);
@@ -180,6 +184,57 @@ export const getSimpleAccountContract = (accountAddress: string) => {
   );
 };
 
+export const getPaymasterContract = () => {
+  return new ethers.Contract(
+    CONTRACT_ADDRESSES.sponsorPaymaster,
+    [
+      'function whitelist(address) view returns (bool)',
+      'function sponsorDeposits(address) view returns (uint256)',
+      'function maxCostPerUserOp() view returns (uint256)',
+      'function entryPoint() view returns (address)',
+      'function depositForOwner() payable',
+      'function getDeposit() view returns (uint256)'
+    ],
+    provider
+  );
+};
+
+// Check paymaster deposit on EntryPoint
+export async function checkPaymasterDeposit(): Promise<{
+  deposit: bigint;
+  formatted: string;
+  hasDeposit: boolean;
+}> {
+  const entryPoint = getEntryPointContract();
+  const entryPointWithDeposit = new ethers.Contract(
+    CONTRACT_ADDRESSES.entryPoint,
+    [
+      'function balanceOf(address account) view returns (uint256)',
+      ...entryPoint.interface.fragments.map(f => f.format())
+    ],
+    provider
+  );
+  
+  const deposit = await entryPointWithDeposit.balanceOf(CONTRACT_ADDRESSES.sponsorPaymaster);
+  const formatted = ethers.formatEther(deposit);
+  
+  console.log(`💰 Paymaster deposit on EntryPoint: ${formatted} ETH`);
+  
+  return {
+    deposit,
+    formatted,
+    hasDeposit: deposit > 0n
+  };
+}
+
+// Check if account is whitelisted
+export async function checkWhitelist(accountAddress: string): Promise<boolean> {
+  const paymaster = getPaymasterContract();
+  const isWhitelisted = await paymaster.whitelist(accountAddress);
+  console.log(`🔍 Account ${accountAddress} whitelisted:`, isWhitelisted);
+  return isWhitelisted;
+}
+
 // Build and execute a UserOperation for token transfer
 export async function executeTokenTransfer(
   accountAddress: string,
@@ -192,6 +247,21 @@ export async function executeTokenTransfer(
   const account = getSimpleAccountContract(accountAddress);
   
   console.log('🔧 Building UserOperation...');
+  
+  // Check paymaster status
+  console.log('🔍 Checking paymaster status...');
+  const paymasterDeposit = await checkPaymasterDeposit();
+  const isWhitelisted = await checkWhitelist(accountAddress);
+  
+  if (!paymasterDeposit.hasDeposit) {
+    console.warn('⚠️ WARNING: Paymaster has no deposit on EntryPoint!');
+    console.warn('Transaction may fail with AA21 (paymaster deposit too low)');
+  }
+  
+  if (!isWhitelisted) {
+    console.warn('⚠️ WARNING: Account is not whitelisted on paymaster!');
+    console.warn('Transaction may fail with paymaster validation');
+  }
   
   // Get nonce
   const nonce = await entryPoint.getNonce(accountAddress, 0);
@@ -217,10 +287,18 @@ export async function executeTokenTransfer(
     maxPriorityFeePerGas: ethers.formatUnits(maxPriorityFeePerGas, 'gwei')
   });
   
+  // Build paymasterAndData field
+  // Format: paymaster address (20 bytes) + validUntil (6 bytes) + validAfter (6 bytes)
+  // For simple sponsorship without time limits, we just use the paymaster address
+  const paymasterAndData = CONTRACT_ADDRESSES.sponsorPaymaster;
+  
+  console.log('💰 Using paymaster for gas sponsorship:', paymasterAndData);
+  
   // Build initial UserOp (for gas estimation)
-  // Note: paymasterAndData left empty - paymaster sponsorship requires additional
-  // signature from paymaster which is complex to implement client-side
-  // For production, paymaster would sign on backend
+  // Use dummy signature with correct length (65 bytes = 130 hex chars + 0x prefix)
+  // This prevents AA23 ECDSA errors during gas estimation
+  const dummySignature = '0x' + 'ff'.repeat(65);
+  
   const userOp: UserOperation = {
     sender: accountAddress,
     nonce: '0x' + nonce.toString(16),
@@ -231,33 +309,29 @@ export async function executeTokenTransfer(
     preVerificationGas: '0xc350', // 50000 in hex
     maxFeePerGas: '0x' + maxFeePerGas.toString(16),
     maxPriorityFeePerGas: '0x' + maxPriorityFeePerGas.toString(16),
-    paymasterAndData: '0x', // Empty - no paymaster sponsorship for now
-    signature: '0x'
+    paymasterAndData: paymasterAndData, // Paymaster will sponsor gas
+    signature: dummySignature // Dummy signature for gas estimation
   };
 
-  // Try to estimate gas (some bundlers support this)
-  try {
-    console.log('🔍 Estimating gas...');
-    const gasEstimate = await bundlerClient.estimateUserOperationGas(userOp, CONTRACT_ADDRESSES.entryPoint);
-    
-    // Ensure hex format with 0x prefix
-    userOp.callGasLimit = typeof gasEstimate.callGasLimit === 'string' && gasEstimate.callGasLimit.startsWith('0x') 
-      ? gasEstimate.callGasLimit 
-      : '0x' + BigInt(gasEstimate.callGasLimit).toString(16);
-    
-    userOp.verificationGasLimit = typeof gasEstimate.verificationGasLimit === 'string' && gasEstimate.verificationGasLimit.startsWith('0x')
-      ? gasEstimate.verificationGasLimit
-      : '0x' + BigInt(gasEstimate.verificationGasLimit).toString(16);
-    
-    userOp.preVerificationGas = typeof gasEstimate.preVerificationGas === 'string' && gasEstimate.preVerificationGas.startsWith('0x')
-      ? gasEstimate.preVerificationGas
-      : '0x' + BigInt(gasEstimate.preVerificationGas).toString(16);
-    
-    console.log('✅ Gas estimation successful:', gasEstimate);
-  } catch (error) {
-    console.warn('⚠️ Gas estimation failed, using default values:', error);
-    // Keep the hex values already set
-  }
+  // Skip gas estimation when using paymaster
+  // Public bundlers fail to estimate gas with paymaster validation
+  // because they can't verify the dummy signature against the real owner
+  // Use conservative default values that are sufficient for token transfers
+  console.log('⚠️ Skipping gas estimation (using paymaster)');
+  console.log('📊 Using conservative default gas values');
+  
+  // Increase gas limits for paymaster validation overhead
+  // These values are sufficient for: account validation + paymaster validation + token transfer
+  userOp.callGasLimit = '0x493e0'; // 300000 gas
+  userOp.verificationGasLimit = '0x7a120'; // 500000 gas  
+  userOp.preVerificationGas = '0x186a0'; // 100000 gas
+  
+  console.log('Gas limits:', {
+    callGasLimit: parseInt(userOp.callGasLimit, 16),
+    verificationGasLimit: parseInt(userOp.verificationGasLimit, 16),
+    preVerificationGas: parseInt(userOp.preVerificationGas, 16),
+    total: parseInt(userOp.callGasLimit, 16) + parseInt(userOp.verificationGasLimit, 16) + parseInt(userOp.preVerificationGas, 16)
+  });
   
   // Sign UserOp
   console.log('✍️ Signing UserOperation...');
