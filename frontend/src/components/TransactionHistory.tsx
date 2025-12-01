@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { CONTRACT_ADDRESSES, SEPOLIA_RPC_URL } from '@/config/wagmi';
+import { RefreshCw, CheckCircle, XCircle, Clock, ExternalLink } from 'lucide-react';
+import { CONTRACT_ADDRESSES, SEPOLIA_RPC_URL, DEMO_ACCOUNT_ADDRESS } from '@/config/wagmi';
 
 interface Transaction {
   hash: string;
@@ -31,9 +32,9 @@ export default function TransactionHistory() {
       const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC_URL);
       
       // Fetch latest transactions for our SimpleAccount
-      const simpleAccountAddress = CONTRACT_ADDRESSES.simpleAccount;
+      const simpleAccountAddress = DEMO_ACCOUNT_ADDRESS;
       const currentBlock = await provider.getBlockNumber();
-      const fromBlock = currentBlock - 10000; // Last ~10k blocks
+      const fromBlock = currentBlock - 9; // Last 10 blocks (Alchemy free tier: max 10 block range)
       
       // Get token transfer events
       const testTokenContract = new ethers.Contract(
@@ -121,9 +122,10 @@ export default function TransactionHistory() {
         <h3 className="text-xl font-semibold">Transaction History</h3>
         <button
           onClick={fetchTransactionHistory}
-          className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500 rounded-lg transition-colors"
+          className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-all duration-200 flex items-center gap-2 text-zinc-400 hover:text-white"
         >
-          🔄 Refresh
+          <RefreshCw className="w-4 h-4" />
+          Refresh
         </button>
       </div>
 
@@ -136,19 +138,20 @@ export default function TransactionHistory() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
                 {tx.status === 'success' ? (
-                  <span className="text-green-500">✅</span>
+                  <CheckCircle className="w-5 h-5 text-green-500" />
                 ) : tx.status === 'failed' ? (
-                  <span className="text-red-500">❌</span>
+                  <XCircle className="w-5 h-5 text-red-500" />
                 ) : (
-                  <span className="text-yellow-500">⏳</span>
+                  <Clock className="w-5 h-5 text-yellow-500" />
                 )}
                 <a
                   href={`https://sepolia.etherscan.io/tx/${tx.hash}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 font-mono text-sm"
+                  className="text-blue-400 hover:text-blue-300 font-mono text-sm flex items-center gap-1"
                 >
                   {truncateHash(tx.hash)}
+                  <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
               <span className="text-xs text-gray-500">

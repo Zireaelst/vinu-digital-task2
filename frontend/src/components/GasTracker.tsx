@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { SEPOLIA_RPC_URL, CONTRACT_ADDRESSES } from '@/config/wagmi';
+import { Fuel, DollarSign, Wallet, Gift, Activity, TrendingDown, RefreshCw } from 'lucide-react';
+import { SEPOLIA_RPC_URL, CONTRACT_ADDRESSES, DEMO_ACCOUNT_ADDRESS } from '@/config/wagmi';
 
 interface GasStats {
   currentGasPrice: string;
@@ -38,10 +39,15 @@ export default function GasTracker() {
     try {
       const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC_URL);
       
-      // Get current gas price
+      // Get current gas price with proper fallback
       const feeData = await provider.getFeeData();
-      const gasPrice = feeData.gasPrice || 0n;
+      console.log('Fee data:', feeData); // Debug log
+      
+      // Use maxFeePerGas if gasPrice is null (EIP-1559)
+      const gasPrice = feeData.gasPrice || feeData.maxFeePerGas || 0n;
       const gasPriceGwei = ethers.formatUnits(gasPrice, 'gwei');
+      
+      console.log('Gas price:', gasPrice.toString(), 'gwei:', gasPriceGwei); // Debug log
       
       // Estimate cost for a typical UserOperation (650k gas)
       const estimatedGas = 650000n;
@@ -49,21 +55,23 @@ export default function GasTracker() {
       const estimatedCostEth = ethers.formatEther(estimatedCost);
       
       // Get Paymaster balance
-      const paymasterContract = new ethers.Contract(
-        CONTRACT_ADDRESSES.paymaster,
-        [
-          'function getDeposit() view returns (uint256)',
-        ],
-        provider
-      );
+      const paymasterAddress = CONTRACT_ADDRESSES.sponsorPaymaster;
       
       let paymasterBalance = '0';
       try {
+        // Try to get deposit from EntryPoint
+        const paymasterContract = new ethers.Contract(
+          paymasterAddress,
+          [
+            'function getDeposit() view returns (uint256)',
+          ],
+          provider
+        );
         const balance = await paymasterContract.getDeposit();
         paymasterBalance = ethers.formatEther(balance);
       } catch {
         // Fallback to direct balance check
-        const balance = await provider.getBalance(CONTRACT_ADDRESSES.paymaster);
+        const balance = await provider.getBalance(paymasterAddress);
         paymasterBalance = ethers.formatEther(balance);
       }
       
@@ -72,18 +80,49 @@ export default function GasTracker() {
       const currentBalance = parseFloat(paymasterBalance);
       const totalSponsored = Math.max(0, initialDeposit - currentBalance);
       
-      // Get transaction count from SimpleAccount
+      // Get sponsored transaction count from Paymaster events
       const currentBlock = await provider.getBlockNumber();
-      const fromBlock = currentBlock - 10000;
+      const fromBlock = currentBlock - 9; // Alchemy free tier: max 10 block range
       
+      console.log('Fetching events from block', fromBlock, 'to', currentBlock); // Debug log
+      
+      // Track both TestToken transfers and Paymaster usage
       const testTokenContract = new ethers.Contract(
         CONTRACT_ADDRESSES.testToken,
         ['event Transfer(address indexed from, address indexed to, uint256 value)'],
         provider
       );
       
-      const filter = testTokenContract.filters.Transfer(CONTRACT_ADDRESSES.simpleAccount, null);
-      const events = await testTokenContract.queryFilter(filter, fromBlock, currentBlock);
+      // Get transfers FROM the SimpleAccount (sponsored transactions)
+      const transferFilter = testTokenContract.filters.Transfer(DEMO_ACCOUNT_ADDRESS, null);
+      const transferEvents = await testTokenContract.queryFilter(transferFilter, fromBlock, currentBlock);
+      
+      console.log('Transfer events found:', transferEvents.length); // Debug log
+      
+      // Also check for Paymaster PostOp events to get accurate sponsored tx count
+      let sponsoredTxCount = transferEvents.length;
+      
+      try {
+        const paymasterContract = new ethers.Contract(
+          CONTRACT_ADDRESSES.sponsorPaymaster,
+          [
+            'event PostOp(bytes32 indexed userOpHash, address indexed sender, uint256 actualGasCost)'
+          ],
+          provider
+        );
+        
+        const postOpFilter = paymasterContract.filters.PostOp();
+        const postOpEvents = await paymasterContract.queryFilter(postOpFilter, fromBlock, currentBlock);
+        console.log('PostOp events found:', postOpEvents.length); // Debug log
+        
+        // Use PostOp events if available as they represent actual sponsored transactions
+        if (postOpEvents.length > 0) {
+          sponsoredTxCount = postOpEvents.length;
+        }
+      } catch (error) {
+        console.error('Error fetching PostOp events:', error);
+        // Continue with transferEvents count
+      }
       
       setStats({
         currentGasPrice: gasPrice.toString(),
@@ -91,7 +130,7 @@ export default function GasTracker() {
         estimatedCost: estimatedCostEth,
         paymasterBalance,
         totalGasSponsored: totalSponsored.toFixed(6),
-        transactionCount: events.length,
+        transactionCount: sponsoredTxCount,
       });
       
       setLoading(false);
@@ -105,23 +144,25 @@ export default function GasTracker() {
     title, 
     value, 
     unit, 
-    icon, 
-    color 
+    icon: Icon, 
+    color,
+    iconColor
   }: { 
     title: string; 
     value: string; 
     unit?: string; 
-    icon: string; 
+    icon: React.ComponentType<{ className?: string }>; 
     color: string;
+    iconColor: string;
   }) => (
-    <div className={`bg-gradient-to-br ${color} p-6 rounded-xl border border-gray-700 hover:border-gray-600 transition-all`}>
+    <div className={`bg-linear-to-br ${color} p-6 rounded-xl border border-white/10 hover:border-white/20 transition-all`}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-gray-400 text-sm font-medium">{title}</span>
-        <span className="text-2xl">{icon}</span>
+        <span className="text-zinc-400 text-sm font-medium">{title}</span>
+        <Icon className={`w-6 h-6 ${iconColor}`} />
       </div>
       <div className="flex items-end space-x-2">
         <span className="text-3xl font-bold text-white">{value}</span>
-        {unit && <span className="text-gray-400 text-sm mb-1">{unit}</span>}
+        {unit && <span className="text-zinc-400 text-sm mb-1">{unit}</span>}
       </div>
     </div>
   );
@@ -138,28 +179,35 @@ export default function GasTracker() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">⛽ Gas Tracker</h2>
-          <p className="text-gray-400 text-sm mt-1">
-            Real-time gas prices and sponsorship stats
-          </p>
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+            <Fuel className="w-6 h-6 text-blue-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-semibold text-white">Gas Tracker</h2>
+            <p className="text-zinc-400 text-sm mt-1">
+              Real-time gas prices and sponsorship stats
+            </p>
+          </div>
         </div>
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`px-4 py-2 rounded-lg border transition-colors ${
+            className={`px-4 py-2 rounded-lg border transition-colors flex items-center space-x-2 ${
               autoRefresh
-                ? 'bg-green-500/10 border-green-500 text-green-400'
-                : 'bg-gray-800 border-gray-700 text-gray-400'
+                ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                : 'bg-white/5 border-white/10 text-zinc-400'
             }`}
           >
-            {autoRefresh ? '🔄 Auto' : '⏸️ Paused'}
+            <RefreshCw className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} />
+            <span>{autoRefresh ? 'Auto' : 'Manual'}</span>
           </button>
           <button
             onClick={fetchGasStats}
-            className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500 text-blue-400 rounded-lg transition-colors"
+            className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg transition-colors flex items-center space-x-2"
           >
-            🔄 Refresh
+            <RefreshCw className="w-4 h-4" />
+            <span>Refresh</span>
           </button>
         </div>
       </div>
@@ -170,15 +218,17 @@ export default function GasTracker() {
           title="Current Gas Price"
           value={parseFloat(stats.currentGasPriceGwei).toFixed(2)}
           unit="gwei"
-          icon="⛽"
+          icon={Fuel}
+          iconColor="text-blue-400"
           color="from-blue-500/10 to-purple-500/10"
         />
         
         <StatCard
           title="Estimated UserOp Cost"
-          value={parseFloat(stats.estimatedCost).toFixed(6)}
+          value={parseFloat(stats.estimatedCost).toFixed(7)}
           unit="ETH"
-          icon="💰"
+          icon={DollarSign}
+          iconColor="text-purple-400"
           color="from-purple-500/10 to-pink-500/10"
         />
         
@@ -186,7 +236,8 @@ export default function GasTracker() {
           title="Paymaster Balance"
           value={parseFloat(stats.paymasterBalance).toFixed(4)}
           unit="ETH"
-          icon="🏦"
+          icon={Wallet}
+          iconColor="text-emerald-400"
           color="from-green-500/10 to-emerald-500/10"
         />
         
@@ -194,7 +245,8 @@ export default function GasTracker() {
           title="Total Gas Sponsored"
           value={stats.totalGasSponsored}
           unit="ETH"
-          icon="🎁"
+          icon={Gift}
+          iconColor="text-yellow-400"
           color="from-yellow-500/10 to-orange-500/10"
         />
         
@@ -202,7 +254,8 @@ export default function GasTracker() {
           title="Sponsored Transactions"
           value={stats.transactionCount.toString()}
           unit="txs"
-          icon="📊"
+          icon={Activity}
+          iconColor="text-pink-400"
           color="from-red-500/10 to-pink-500/10"
         />
         
@@ -210,11 +263,12 @@ export default function GasTracker() {
           title="Avg Gas Saved"
           value={
             stats.transactionCount > 0
-              ? (parseFloat(stats.totalGasSponsored) / stats.transactionCount).toFixed(6)
-              : '0.000000'
+              ? (parseFloat(stats.totalGasSponsored) / stats.transactionCount).toFixed(7)
+              : '0.0000000'
           }
           unit="ETH/tx"
-          icon="💎"
+          icon={TrendingDown}
+          iconColor="text-indigo-400"
           color="from-indigo-500/10 to-blue-500/10"
         />
       </div>
@@ -259,7 +313,7 @@ export default function GasTracker() {
       </div>
 
       {/* Paymaster Info */}
-      <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-6">
+      <div className="bg-linear-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-6">
         <div className="flex items-start space-x-4">
           <div className="text-4xl">🛡️</div>
           <div className="flex-1">
