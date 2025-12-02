@@ -13,6 +13,12 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Allow both Tailwind native and custom gradient classes
+      "@next/next/no-tailwind-css-conflict": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

@@ -29,7 +29,7 @@ export function HoverBorderGradient({
   return (
     <Tag
       className={cn(
-        "relative group p-px rounded-full bg-linear-to-br from-blue-500/20 to-purple-500/20 transition-all duration-500 hover:from-blue-500/40 hover:to-purple-500/40",
+        "relative group p-px rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 transition-all duration-500 hover:from-blue-500/40 hover:to-purple-500/40",
         containerClassName
       )}
       onClick={onClick}
@@ -37,7 +37,7 @@ export function HoverBorderGradient({
       {...otherProps}
     >
       <motion.div
-        className="absolute inset-0 rounded-full bg-linear-to-br from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         animate={{
           background: clockwise
             ? [

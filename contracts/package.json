@@ -14,7 +14,8 @@
     "verify": "hardhat run scripts/deployment/verify.ts --network sepolia",
     "demo:simple": "hardhat run scripts/demos/simple-sponsored-transfer.ts --network sepolia",
     "demo:full": "hardhat run scripts/demos/demo-with-simpleaccount.ts --network sepolia",
-    "demo:basic": "hardhat run scripts/demos/simple-demo.ts --network sepolia"
+    "demo:basic": "hardhat run scripts/demos/simple-demo.ts --network sepolia",
+    "demo:bundler": "hardhat run scripts/demos/demo-with-real-bundler.ts --network sepolia"
   },
   "keywords": [
     "erc4337",

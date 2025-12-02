@@ -2,6 +2,7 @@
 
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect } from 'wagmi';
+import { Wallet, AlertTriangle, LogOut } from 'lucide-react';
 
 export default function WalletConnection() {
   const { address, isConnected } = useAccount();
@@ -47,8 +48,8 @@ export default function WalletConnection() {
                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 px-6 rounded-lg transition-all duration-200 flex items-center space-x-2"
                       type="button"
                     >
-                      <span>🔗</span>
-                      <span>Cüzdan Bağla</span>
+                      <Wallet className="w-4 h-4" />
+                      <span>Connect Wallet</span>
                     </button>
                   );
                 }
@@ -60,8 +61,8 @@ export default function WalletConnection() {
                       className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-lg transition-colors flex items-center space-x-2"
                       type="button"
                     >
-                      <span>⚠️</span>
-                      <span>Yanlış Ağ</span>
+                      <AlertTriangle className="w-4 h-4" />
+                      <span>Wrong Network</span>
                     </button>
                   );
                 }
@@ -71,7 +72,7 @@ export default function WalletConnection() {
                     {/* Chain Info */}
                     <button
                       onClick={openChainModal}
-                      className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                      className="bg-white/5 hover:bg-white/10 border border-white/10 text-white py-2 px-4 rounded-xl transition-all duration-200 flex items-center space-x-2 backdrop-blur-sm"
                       type="button"
                     >
                       {chain.hasIcon && (
@@ -94,21 +95,21 @@ export default function WalletConnection() {
                           )}
                         </div>
                       )}
-                      <span className="text-sm">{chain.name}</span>
+                      <span className="text-sm font-medium">{chain.name}</span>
                     </button>
 
                     {/* Account Info */}
                     <button
                       onClick={openAccountModal}
-                      className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                      className="bg-white/5 hover:bg-white/10 border border-white/10 text-white py-2 px-4 rounded-xl transition-all duration-200 flex items-center space-x-2 backdrop-blur-sm"
                       type="button"
                     >
-                      <span className="text-sm font-mono">
+                      <span className="text-sm font-mono font-medium">
                         {account.displayName}
                       </span>
                       {account.displayBalance && (
-                        <span className="text-xs text-gray-300">
-                          ({account.displayBalance})
+                        <span className="text-xs text-zinc-400 font-normal">
+                          {account.displayBalance}
                         </span>
                       )}
                     </button>
@@ -116,11 +117,11 @@ export default function WalletConnection() {
                     {/* Disconnect Button */}
                     <button
                       onClick={() => disconnect()}
-                      className="bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg transition-colors"
+                      className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 py-2 px-3 rounded-xl transition-all duration-200 backdrop-blur-sm group"
                       type="button"
-                      title="Bağlantıyı Kes"
+                      title="Disconnect"
                     >
-                      <span>🔌</span>
+                      <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     </button>
                   </div>
                 );
@@ -132,9 +133,9 @@ export default function WalletConnection() {
 
       {/* Connection Status */}
       {isConnected && address && (
-        <div className="hidden md:flex items-center space-x-2 text-sm text-gray-300">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span>Bağlandı</span>
+        <div className="hidden md:flex items-center space-x-2 text-xs text-zinc-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1.5">
+          <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
+          <span className="font-medium text-emerald-400">Connected</span>
         </div>
       )}
     </div>

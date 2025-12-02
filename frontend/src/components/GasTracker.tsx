@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { Fuel, DollarSign, Wallet, Gift, Activity, TrendingDown, RefreshCw } from 'lucide-react';
-import { SEPOLIA_RPC_URL, CONTRACT_ADDRESSES, DEMO_ACCOUNT_ADDRESS } from '@/config/wagmi';
+import { SEPOLIA_RPC_URL, CONTRACT_ADDRESSES } from '@/config/wagmi';
 
 interface GasStats {
   currentGasPrice: string;
@@ -13,6 +13,22 @@ interface GasStats {
   totalGasSponsored: string;
   transactionCount: number;
 }
+
+// Local storage key for transaction count (same as TransactionHistory)
+const STORAGE_KEY = 'erc4337_transaction_history';
+
+// Load transaction count from localStorage
+const loadTransactionCount = (): number => {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return 0;
+    const transactions = JSON.parse(stored);
+    return Array.isArray(transactions) ? transactions.length : 0;
+  } catch {
+    return 0;
+  }
+};
 
 export default function GasTracker() {
   const [stats, setStats] = useState<GasStats>({
@@ -80,60 +96,52 @@ export default function GasTracker() {
       const currentBalance = parseFloat(paymasterBalance);
       const totalSponsored = Math.max(0, initialDeposit - currentBalance);
       
-      // Get sponsored transaction count from Paymaster events
-      const currentBlock = await provider.getBlockNumber();
-      const fromBlock = currentBlock - 9; // Alchemy free tier: max 10 block range
+      // Get sponsored transaction count from localStorage (same as TransactionHistory)
+      // This avoids Alchemy free tier limitations (max 10 block range)
+      const sponsoredTxCount = loadTransactionCount();
       
-      console.log('Fetching events from block', fromBlock, 'to', currentBlock); // Debug log
-      
-      // Track both TestToken transfers and Paymaster usage
-      const testTokenContract = new ethers.Contract(
-        CONTRACT_ADDRESSES.testToken,
-        ['event Transfer(address indexed from, address indexed to, uint256 value)'],
-        provider
-      );
-      
-      // Get ALL transfers (both SimpleAccount and direct wallet)
-      // This catches fallback direct transfers when bundler fails
-      const allTransfersFilter = testTokenContract.filters.Transfer(null, null);
-      const allTransfers = await testTokenContract.queryFilter(allTransfersFilter, fromBlock, currentBlock);
-      
-      // Filter for transfers FROM SimpleAccount OR related to our wallet
-      const relevantTransfers = allTransfers.filter(event => {
-        const eventLog = event as ethers.EventLog;
-        if (!eventLog.args) return false;
-        const from = eventLog.args[0]?.toString().toLowerCase();
-        const to = eventLog.args[1]?.toString().toLowerCase();
-        return from === DEMO_ACCOUNT_ADDRESS.toLowerCase() || 
-               to === DEMO_ACCOUNT_ADDRESS.toLowerCase();
-      });
-      
-      console.log('Transfer events found:', relevantTransfers.length, 'out of', allTransfers.length, 'total'); // Debug log
-      
-      // Also check for Paymaster PostOp events to get accurate sponsored tx count
-      let sponsoredTxCount = relevantTransfers.length;
-      
-      try {
-        const paymasterContract = new ethers.Contract(
-          CONTRACT_ADDRESSES.sponsorPaymaster,
-          [
-            'event PostOp(bytes32 indexed userOpHash, address indexed sender, uint256 actualGasCost)'
-          ],
-          provider
-        );
-        
-        const postOpFilter = paymasterContract.filters.PostOp();
-        const postOpEvents = await paymasterContract.queryFilter(postOpFilter, fromBlock, currentBlock);
-        console.log('PostOp events found:', postOpEvents.length); // Debug log
-        
-        // Use PostOp events if available as they represent actual sponsored transactions
-        if (postOpEvents.length > 0) {
-          sponsoredTxCount = postOpEvents.length;
-        }
-      } catch (error) {
-        console.error('Error fetching PostOp events:', error);
-        // Continue with transferEvents count
-      }
+      /* 
+       * NOTE: Event queries commented out due to Alchemy free tier limitations
+       * Alchemy free tier only allows querying max 10 blocks at a time
+       * We use localStorage instead to track all transactions (same as TransactionHistory component)
+       * 
+       * If you have a paid Alchemy plan or different RPC provider, you can uncomment this:
+       * 
+       * const currentBlock = await provider.getBlockNumber();
+       * const fromBlock = currentBlock - 9; // Alchemy free tier: max 10 block range
+       * 
+       * // Track TestToken transfers
+       * const testTokenContract = new ethers.Contract(
+       *   CONTRACT_ADDRESSES.testToken,
+       *   ['event Transfer(address indexed from, address indexed to, uint256 value)'],
+       *   provider
+       * );
+       * 
+       * const allTransfersFilter = testTokenContract.filters.Transfer(null, null);
+       * const allTransfers = await testTokenContract.queryFilter(allTransfersFilter, fromBlock, currentBlock);
+       * 
+       * // Filter for transfers FROM SimpleAccount OR related to our wallet
+       * const relevantTransfers = allTransfers.filter(event => {
+       *   const eventLog = event as ethers.EventLog;
+       *   if (!eventLog.args) return false;
+       *   const from = eventLog.args[0]?.toString().toLowerCase();
+       *   const to = eventLog.args[1]?.toString().toLowerCase();
+       *   return from === DEMO_ACCOUNT_ADDRESS.toLowerCase() || 
+       *          to === DEMO_ACCOUNT_ADDRESS.toLowerCase();
+       * });
+       * 
+       * // Check for Paymaster PostOp events to get accurate sponsored tx count
+       * const paymasterContract = new ethers.Contract(
+       *   CONTRACT_ADDRESSES.sponsorPaymaster,
+       *   ['event PostOp(bytes32 indexed userOpHash, address indexed sender, uint256 actualGasCost)'],
+       *   provider
+       * );
+       * 
+       * const postOpFilter = paymasterContract.filters.PostOp();
+       * const postOpEvents = await paymasterContract.queryFilter(postOpFilter, fromBlock, currentBlock);
+       * 
+       * let sponsoredTxCount = postOpEvents.length > 0 ? postOpEvents.length : relevantTransfers.length;
+       */
       
       setStats({
         currentGasPrice: gasPrice.toString(),
@@ -166,7 +174,7 @@ export default function GasTracker() {
     color: string;
     iconColor: string;
   }) => (
-    <div className={`bg-linear-to-br ${color} p-6 rounded-xl border border-white/10 hover:border-white/20 transition-all`}>
+    <div className={`bg-gradient-to-br ${color} p-6 rounded-xl border border-white/10 hover:border-white/20 transition-all`}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-zinc-400 text-sm font-medium">{title}</span>
         <Icon className={`w-6 h-6 ${iconColor}`} />
@@ -324,9 +332,11 @@ export default function GasTracker() {
       </div>
 
       {/* Paymaster Info */}
-      <div className="bg-linear-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-6">
+      <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-6">
         <div className="flex items-start space-x-4">
-          <div className="text-4xl">🛡️</div>
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+            <Gift className="w-7 h-7 text-emerald-400" />
+          </div>
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-blue-400 mb-2">
               Paymaster Gas Sponsorship

@@ -37,7 +37,6 @@ export default function Home() {
   });
   
   const [activeTab, setActiveTab] = useState<'contracts' | 'history' | 'gas'>('contracts');
-  const [historyRefreshKey, setHistoryRefreshKey] = useState(0); // Force re-render of TransactionHistory
 
   const handleInputChange = (field: keyof TransferState, value: string) => {
     setState((prev) => ({
@@ -105,9 +104,6 @@ export default function Home() {
         txHash: result.receipt.receipt.transactionHash,
       }));
 
-      // Refresh transaction history
-      setHistoryRefreshKey(prev => prev + 1);
-
       console.log('🎉 Meta Transaction Successful!', {
         userOpHash: result.userOpHash,
         txHash: result.receipt.receipt.transactionHash,
@@ -148,7 +144,7 @@ export default function Home() {
       <Spotlight className="top-0 left-0" fill="#262626" />
       
       {/* Header */}
-      <header className="relative z-10 border-b border-white/10">
+      <header className="relative z-10 border-b border-white/10 backdrop-blur-xl bg-neutral-950/80">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <motion.div 
@@ -157,12 +153,14 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <Zap className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold tracking-tight">Gasless Transfers</h1>
-                <p className="text-sm text-zinc-400">ERC-4337 Account Abstraction</p>
+                <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-300">
+                  Gasless Transfers
+                </h1>
+                <p className="text-xs text-zinc-500">ERC-4337 Account Abstraction</p>
               </div>
             </motion.div>
             
@@ -187,15 +185,15 @@ export default function Home() {
           transition={{ duration: 0.8, delay: 0.3 }}
         >
           <h1 className="text-6xl md:text-8xl font-bold tracking-tight mb-6">
-            <span className="bg-clip-text text-transparent bg-linear-to-br from-white via-white to-zinc-400">
+            <span className="text-white">
               Gasless
             </span>
             <br />
-            <span className="bg-clip-text text-transparent bg-linear-to-br from-blue-500 to-purple-500">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
               Transfers
             </span>
           </h1>
-          <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-zinc-300 max-w-2xl mx-auto leading-relaxed">
             Experience the power of ERC-4337. Send tokens without gas fees, sponsored by our paymaster infrastructure.
           </p>
         </motion.div>
@@ -240,7 +238,7 @@ export default function Home() {
           transition={{ duration: 0.8, delay: 0.7 }}
         >
           <div className="flex items-center space-x-3 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
               <Send className="w-4 h-4 text-white" />
             </div>
             <h2 className="text-2xl font-semibold">Send Transaction</h2>
@@ -411,12 +409,14 @@ export default function Home() {
           {/* Section Header */}
           <div className="text-center mb-12">
             <motion.h2 
-              className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-linear-to-r from-blue-400 via-purple-400 to-pink-400"
+              className="text-4xl font-bold mb-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              Dashboard & Analytics
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+                Dashboard & Analytics
+              </span>
             </motion.h2>
             <motion.p 
               className="text-zinc-400 text-lg"
@@ -487,7 +487,7 @@ export default function Home() {
 
             {activeTab === 'history' && (
               <div className="glass-card rounded-3xl p-8">
-                <TransactionHistory key={historyRefreshKey} />
+                <TransactionHistory />
               </div>
             )}
 

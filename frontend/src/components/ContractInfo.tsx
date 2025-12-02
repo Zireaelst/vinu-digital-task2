@@ -152,12 +152,14 @@ export default function ContractInfo({ accountAddress }: { accountAddress: strin
       
       <div className="mt-6 p-4 bg-blue-500/10 rounded-xl border border-blue-500/30">
         <div className="flex items-center space-x-2 text-blue-300 text-sm mb-2">
-          <span>🌐</span>
+          <div className="w-5 h-5 rounded-full bg-blue-400/20 flex items-center justify-center">
+            <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+          </div>
           <strong>Network:</strong>
           <span>Sepolia Testnet</span>
         </div>
         <div className="flex items-center space-x-2 text-blue-300 text-sm">
-          <span>⛽</span>
+          <Shield className="w-4 h-4 text-emerald-400" />
           <strong>Gas Sponsorship:</strong>
           <span>Enabled via Paymaster</span>
         </div>
