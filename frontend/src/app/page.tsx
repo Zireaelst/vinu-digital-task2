@@ -13,6 +13,7 @@ import WalletConnection from "@/components/WalletConnection";
 import ContractInfo from "@/components/ContractInfo";
 import TransactionHistory from "@/components/TransactionHistory";
 import GasTracker from "@/components/GasTracker";
+import BatchTransfer from "@/components/BatchTransfer";
 import { executeTokenTransfer, formatAddress, isValidAddress, isValidAmount } from "@/utils/bundler";
 import { DEMO_PRIVATE_KEY, DEMO_ACCOUNT_ADDRESS } from "@/config/wagmi";
 
@@ -36,7 +37,7 @@ export default function Home() {
     txHash: "",
   });
   
-  const [activeTab, setActiveTab] = useState<'contracts' | 'history' | 'gas'>('contracts');
+  const [activeTab, setActiveTab] = useState<'batch' | 'contracts' | 'history' | 'gas'>('batch');
 
   const handleInputChange = (field: keyof TransferState, value: string) => {
     setState((prev) => ({
@@ -435,17 +436,29 @@ export default function Home() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            <div className="grid grid-cols-3 gap-2 w-full">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 w-full">
+              <button
+                onClick={() => setActiveTab('batch')}
+                className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                  activeTab === 'batch'
+                    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Zap className="w-4 h-4" />
+                <span>Batch</span>
+              </button>
               <button
                 onClick={() => setActiveTab('contracts')}
-                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
                   activeTab === 'contracts'
-                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <Shield className="w-4 h-4" />
-                <span>Contracts</span>
+                <span className="hidden md:inline">Contracts</span>
+                <span className="md:hidden">Info</span>
               </button>
               <button
                 onClick={() => setActiveTab('history')}
@@ -479,6 +492,12 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
+            {activeTab === 'batch' && (
+              <div className="glass-card rounded-3xl p-8">
+                <BatchTransfer />
+              </div>
+            )}
+
             {activeTab === 'contracts' && (
               <div className="glass-card rounded-3xl p-8">
                 <ContractInfo accountAddress={DEMO_ACCOUNT_ADDRESS} />

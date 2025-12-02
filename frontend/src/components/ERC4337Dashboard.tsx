@@ -7,6 +7,7 @@ import SponsoredTransfer from './SponsoredTransfer';
 import WalletConnection from './WalletConnection';
 import TransactionHistory from './TransactionHistory';
 import GasTracker from './GasTracker';
+import BatchTransfer from './BatchTransfer';
 
 interface DashboardStats {
   connectedWallet: string | null;
@@ -23,7 +24,7 @@ export default function ERC4337Dashboard() {
     gasPriceGwei: null
   });
 
-  const [activeTab, setActiveTab] = useState<'contracts' | 'transfer' | 'history' | 'gas'>('contracts');
+  const [activeTab, setActiveTab] = useState<'contracts' | 'transfer' | 'batch' | 'history' | 'gas'>('contracts');
 
   useEffect(() => {
     // Simulate some network stats
@@ -80,7 +81,7 @@ export default function ERC4337Dashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Navigation Tabs */}
         <div className="mb-8">
-          <nav className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-gray-800 rounded-lg p-1">
+          <nav className="grid grid-cols-2 md:grid-cols-5 gap-2 bg-gray-800 rounded-lg p-1">
             <button
               onClick={() => setActiveTab('contracts')}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -100,6 +101,16 @@ export default function ERC4337Dashboard() {
               }`}
             >
               💸 Transfer
+            </button>
+            <button
+              onClick={() => setActiveTab('batch')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'batch'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
+              }`}
+            >
+              🎯 Batch
             </button>
             <button
               onClick={() => setActiveTab('history')}
@@ -192,6 +203,12 @@ export default function ERC4337Dashboard() {
           {activeTab === 'transfer' && (
             <div className="space-y-6">
               <SponsoredTransfer />
+            </div>
+          )}
+
+          {activeTab === 'batch' && (
+            <div className="space-y-6">
+              <BatchTransfer />
             </div>
           )}
 

@@ -187,15 +187,37 @@ async function main() {
   console.log(`   Max Fee: ${ethers.formatUnits(maxFeePerGas, "gwei")} gwei`);
   console.log(`   Priority Fee: ${ethers.formatUnits(maxPriorityFeePerGas, "gwei")} gwei`);
   
+  // Dynamic gas estimation
+  console.log(chalk.cyan(`\n🔍 Estimating gas for operation...`));
+  let callGasLimit = 150000n;
+  let verificationGasLimit = 300000n;
+  let preVerificationGas = 50000n;
+  
+  try {
+    const gasEstimate = await ethers.provider.estimateGas({
+      from: ENTRYPOINT_ADDRESS,
+      to: accountAddress,
+      data: executeCallData
+    });
+    
+    // Add 20% buffer to gas estimate
+    callGasLimit = (gasEstimate * 120n) / 100n;
+    console.log(chalk.green(`✅ Gas estimated: ${gasEstimate}`));
+    console.log(chalk.green(`   Call Gas Limit (with 20% buffer): ${callGasLimit}`));
+  } catch (error: any) {
+    console.log(chalk.yellow(`⚠️  Could not estimate gas: ${error.message}`));
+    console.log(chalk.yellow(`   Using default gas limits...`));
+  }
+  
   // Build UserOperation
   const userOp = {
     sender: accountAddress,
     nonce: nonce,
     initCode: "0x",
     callData: executeCallData,
-    callGasLimit: 150000n,
-    verificationGasLimit: 300000n,
-    preVerificationGas: 50000n,
+    callGasLimit: callGasLimit,
+    verificationGasLimit: verificationGasLimit,
+    preVerificationGas: preVerificationGas,
     maxFeePerGas: maxFeePerGas,
     maxPriorityFeePerGas: maxPriorityFeePerGas,
     paymasterAndData: deployedContracts.sponsorPaymaster,

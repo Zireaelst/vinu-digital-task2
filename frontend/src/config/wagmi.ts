@@ -11,9 +11,11 @@ export const config = getDefaultConfig({
 // Contract addresses from our deployment (updated with deployed_addresses.json)
 export const CONTRACT_ADDRESSES = {
   entryPoint: '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789',
-  simpleAccountFactory: '0x6E532B9e22A8F31105C741658989Ca79da3Fb11A',
+  simpleAccountFactory: '0x9C12C19B00cAA9c7c23383F399924d26A0E06fDc',
   sponsorPaymaster: '0x61d222f1e0386a7Af71C865fF83Ad4CEd1131011',
   testToken: '0xab230E033D846Add5367Eb48BdCC4928259239a8',
+  // New updated SimpleAccount implementation with batch operations
+  simpleAccountImplementation: '0x176f12B52726D6a248ffD0F81A8a50829AA97aE1',
 } as const;
 
 // Known account address from our deployment (already deployed on Sepolia)

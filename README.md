@@ -37,9 +37,11 @@ A complete implementation of **ERC-4337 (Account Abstraction)** standard on Sepo
 
 - ✅ **ERC-4337 Compliant** - Full Account Abstraction support
 - ✅ **Gasless Transactions** - Paymaster sponsors all gas fees
+- ✅ **Batch Operations** - Multiple transactions in one UserOperation (30-40% gas savings)
+- ✅ **Dynamic Gas Optimization** - Automatic gas estimation for optimal costs
 - ✅ **Verified Contracts** - All contracts verified on Etherscan
-- ✅ **Modern Frontend** - Next.js 16 with TypeScript
-- ✅ **Production Tested** - 27 passing unit tests
+- ✅ **Modern Frontend** - Next.js 16 with TypeScript & batch transfer UI
+- ✅ **Production Tested** - 39+ passing unit tests
 - ✅ **Live Proof** - Real transaction hash on Sepolia
 
 ---

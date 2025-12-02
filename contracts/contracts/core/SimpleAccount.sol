@@ -43,4 +43,46 @@ contract SimpleAccount is AASimpleAccount.SimpleAccount {
     function isInitialized() public view returns (bool) {
         return owner != address(0);
     }
+
+    /**
+     * @dev Execute a batch of transactions
+     * @param dest Array of destination addresses
+     * @param value Array of ETH amounts to send
+     * @param func Array of function call data
+     * @notice All arrays must have the same length
+     * @notice Only callable by the EntryPoint or the owner
+     */
+    function executeBatch(
+        address[] calldata dest,
+        uint256[] calldata value,
+        bytes[] calldata func
+    ) external {
+        _requireFromEntryPointOrOwner();
+        require(dest.length == value.length && value.length == func.length, "SimpleAccount: wrong array lengths");
+        require(dest.length > 0, "SimpleAccount: empty arrays");
+        
+        for (uint256 i = 0; i < dest.length; i++) {
+            _call(dest[i], value[i], func[i]);
+        }
+    }
+
+    /**
+     * @dev Get batch execution call data
+     * @param dest Array of destination addresses
+     * @param value Array of ETH amounts to send
+     * @param func Array of function call data
+     * @return Encoded executeBatch call data
+     */
+    function getExecuteBatchCallData(
+        address[] calldata dest,
+        uint256[] calldata value,
+        bytes[] calldata func
+    ) external pure returns (bytes memory) {
+        return abi.encodeWithSignature(
+            "executeBatch(address[],uint256[],bytes[])",
+            dest,
+            value,
+            func
+        );
+    }
 }

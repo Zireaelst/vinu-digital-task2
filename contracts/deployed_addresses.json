@@ -6,5 +6,8 @@
   "deployedAt": "2025-11-29T23:30:01.109Z",
   "network": "sepolia",
   "deployer": "0x6602130E170195670407CeE93932C1B0b9454aDD",
-  "factoryFixedAt": "2025-11-29T23:44:25.545Z"
+  "factoryFixedAt": "2025-11-29T23:44:25.545Z",
+  "simpleAccountImplementation": "0x176f12B52726D6a248ffD0F81A8a50829AA97aE1",
+  "lastUpdated": "2025-12-02T21:07:36.770Z",
+  "updateNote": "Updated SimpleAccount with executeBatch functionality"
 }
