@@ -206,3 +206,14 @@ docs/build/
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# Project-specific ignores
+demo_output.log
+transaction_proof.json
+deployed_addresses.json
+
+# Archive folders
+**/archive/
+
+# Editor-specific chat files
+chat-editing-snapshot-*
