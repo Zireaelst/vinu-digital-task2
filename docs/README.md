@@ -45,6 +45,12 @@ Welcome to the **ERC-4337 Account Abstraction** project documentation. This dire
 | **[Bundler Integration](BUNDLER_INTEGRATION.md)** | ERC-4337 bundler setup and configuration |
 | **[Final Summary](FINAL_SUMMARY.md)** | Complete project overview and achievements |
 
+### 📊 Visual Documentation
+
+| Document | Description |
+|----------|-------------|
+| **[Flowcharts & Diagrams](FLOWCHARTS.md)** | System flows, architecture diagrams, and visual guides |
+
 ---
 
 ## 🎓 Learning Paths
@@ -161,16 +167,18 @@ Status and requirements:
 ## 📊 Documentation Statistics
 
 ```
-Total Documents:     15
+Total Documents:     16
 Getting Started:      3
 Technical Docs:       4
 Testing:             3
 Frontend:            2
 Integration:         2
+Visual:              1
 Maintenance:         1
 
-Total Pages:        ~200
+Total Pages:        ~220
 Code Examples:       100+
+Flowcharts:         12
 Diagrams:           15+
 ```
 

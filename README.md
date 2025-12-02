@@ -8,6 +8,27 @@
 
 > **Production-ready ERC-4337 Account Abstraction implementation with gasless meta-transactions on Sepolia Testnet**
 
+## 📑 Table of Contents
+
+- [📋 Project Overview](#-project-overview)
+- [🛠️ Technology Stack](#️-technology-stack)
+- [🔗 Live Deployment](#-live-deployment)
+- [📚 Documentation](#-documentation)
+- [🏗️ Project Structure](#️-project-structure)
+- [⚡ Quick Start](#-quick-start)
+- [💡 Usage](#-usage)
+- [🧪 Testing](#-testing)
+- [📊 Smart Contract Architecture](#-smart-contract-architecture)
+- [🔒 Security](#-security)
+- [⚙️ Gas Optimization](#️-gas-optimization)
+- [📚 Learning Resources](#-learning-resources)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+- [👨‍💻 Author & Contact](#-author--contact)
+- [🙏 Acknowledgments](#-acknowledgments)
+
+---
+
 ## 📋 Project Overview
 
 A complete implementation of **ERC-4337 (Account Abstraction)** standard on Sepolia testnet, featuring **gasless transactions** sponsored by a Paymaster. Users can transfer tokens between accounts without paying gas fees - the sponsor wallet covers all transaction costs.
@@ -21,12 +42,67 @@ A complete implementation of **ERC-4337 (Account Abstraction)** standard on Sepo
 - ✅ **Production Tested** - 27 passing unit tests
 - ✅ **Live Proof** - Real transaction hash on Sepolia
 
+---
+
+## 🛠️ Technology Stack
+
+### High-Level Architecture
+
+```mermaid
+graph LR
+    Frontend(Next.js + Wagmi) -->|UserOp| Bundler(Pimlico/Bundler)
+    Bundler -->|Bundle| Chain(Sepolia Network)
+    Chain -->|Execute| Contracts(Smart Contracts)
+    subgraph Contracts
+        EntryPoint
+        SimpleAccount
+        Paymaster
+    end
+    style Frontend fill:#61dafb,stroke:#333,stroke-width:2px
+    style Bundler fill:#f7df1e,stroke:#333,stroke-width:2px
+    style Chain fill:#3c3c3d,stroke:#333,stroke-width:2px,color:white
+    style Contracts fill:#363636,stroke:#333,stroke-width:2px,color:white
+```
+
+### Smart Contracts & Development
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Solidity** | 0.8.23 | Smart contract language |
+| **Hardhat** | 2.22.17 | Development framework |
+| **ethers.js** | 6.10.0 | Ethereum library |
+| **OpenZeppelin** | 4.9.3 | Security & standards |
+| **@account-abstraction/contracts** | 0.6.0 | ERC-4337 implementation |
+| **TypeScript** | 5.x | Type-safe development |
+
+### Frontend
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Next.js** | 16.0.5 | React framework |
+| **React** | 19.2.0 | UI library |
+| **TypeScript** | 5.x | Type safety |
+| **wagmi** | 2.19.5 | Ethereum React hooks |
+| **viem** | 2.40.3 | TypeScript Ethereum library |
+| **Tailwind CSS** | 4.x | Styling framework |
+
+### Infrastructure & APIs
+
+| Service | Purpose |
+|---------|---------|
+| **Sepolia Testnet** | Ethereum test network |
+| **Alchemy** | RPC provider & APIs |
+| **Etherscan** | Block explorer & verification |
+| **EntryPoint (v0.6)** | ERC-4337 singleton |
+
+---
+
 ## 🔗 Live Deployment
 
 ### 📜 Transaction Proof
 **Verified Transaction:** [`0x1d61aeea5e3cad7fb0906e6434d0932a732c36b19a27422af07dbc800bdb6c9f`](https://sepolia.etherscan.io/tx/0x1d61aeea5e3cad7fb0906e6434d0932a732c36b19a27422af07dbc800bdb6c9f)
 
-### � Smart Contracts on Sepolia
+### 📜 Smart Contracts on Sepolia
 
 | Contract | Address | Status |
 |----------|---------|--------|
@@ -35,13 +111,18 @@ A complete implementation of **ERC-4337 (Account Abstraction)** standard on Sepo
 | **SimpleAccountFactory** | [`0x9C12C19B00cAA9c7c23383F399924d26A0E06fDc`](https://sepolia.etherscan.io/address/0x9C12C19B00cAA9c7c23383F399924d26A0E06fDc) | ✅ Deployed |
 | **EntryPoint** | [`0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`](https://sepolia.etherscan.io/address/0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789) | ✅ Official |
 
+---
+
 ## 📚 Documentation
 
-- 📊 [Transaction Proof](./docs/TRANSACTION_PROOF.md) - Live transaction evidence
+- 🚀 [Quick Start Guide](./docs/QUICKSTART.md) - Get started in 5 minutes
+- 📊 [Flowcharts & Diagrams](./docs/FLOWCHARTS.md) - Visual system architecture
 - 📋 [Technical Specification](./docs/TECH_SPEC.md) - Architecture & design
-- ✅ [Project Completion](./docs/PROJECT_COMPLETION.md) - Implementation report
-- 🚀 [Quick Start Guide](./docs/QUICKSTART.md) - Get started quickly
-- 🧪 [Testing Guide](./docs/TESTING.md) - Test coverage & results
+- 🔐 [Smart Contracts](./docs/SMART_CONTRACTS.md) - Contract details
+- ⚙️ [Technology Stack](./docs/TECHNOLOGY_STACK.md) - All technologies used
+- 🧪 [Test Strategy](./docs/TEST_STRATEGY.md) - Testing approach
+- 📖 [API Reference](./docs/API_REFERENCE.md) - Complete API docs
+- 🚢 [Deployment Guide](./docs/DEPLOYMENT.md) - Production deployment
 - 📖 [Full Documentation Index](./docs/README.md) - All documentation
 
 ---
@@ -388,90 +469,6 @@ solidity: {
 
 ---
 
-## 🎯 Project Requirements - Completion Status
-
-### ✅ Technical Implementation (40/40 points)
-- ✅ SimpleAccount Contract (ERC-4337 compliant)
-- ✅ SponsorPaymaster Contract (Gas sponsorship)
-- ✅ TestToken Contract (ERC-20)
-- ✅ Code quality & best practices
-- ✅ Proper error handling
-- ✅ Security considerations
-
-### ✅ Functionality (30/30 points)
-- ✅ Meta transactions working correctly
-- ✅ Gas sponsorship functioning properly
-- ✅ Real transaction hash proof on Sepolia
-- ✅ End-to-end flow tested
-- ✅ Error handling & edge cases
-
-### ✅ Documentation (20/20 points)
-- ✅ Clear and comprehensive README
-- ✅ NatSpec code comments
-- ✅ Setup instructions
-- ✅ Technical specification
-- ✅ API documentation
-- ✅ Troubleshooting guides
-
-### ✅ Demo & Presentation (10/10 points)
-- ✅ Working demo script
-- ✅ Technical details explained
-- ✅ Transaction proof provided
-- ✅ Video demonstration ready
-
-### ✅ Bonus: Frontend Interface (15/15 points)
-- ✅ Next.js 16 web interface
-- ✅ Wallet connection support
-- ✅ UserOperation builder
-- ✅ Modern, responsive UI/UX
-- ✅ Real-time transaction tracking
-
-**TOTAL SCORE: 115/115 points** 🎉
-
-### Additional Achievements
-- ✅ TypeScript implementation (100% coverage)
-- ✅ Comprehensive test suite (27 passing tests)
-- ✅ Verified contracts on Etherscan
-- ✅ Production-ready code quality
-- ✅ CI/CD ready structure
-
----
-
-## 🛠️ Technology Stack
-
-### Smart Contracts & Development
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Solidity** | 0.8.23 | Smart contract language |
-| **Hardhat** | 2.22.17 | Development framework |
-| **ethers.js** | 6.10.0 | Ethereum library |
-| **OpenZeppelin** | 4.9.3 | Security & standards |
-| **@account-abstraction/contracts** | 0.6.0 | ERC-4337 implementation |
-| **TypeScript** | 5.x | Type-safe development |
-
-### Frontend
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Next.js** | 16.0.5 | React framework |
-| **React** | 19.2.0 | UI library |
-| **TypeScript** | 5.x | Type safety |
-| **wagmi** | 2.19.5 | Ethereum React hooks |
-| **viem** | 2.40.3 | TypeScript Ethereum library |
-| **Tailwind CSS** | 4.x | Styling framework |
-
-### Infrastructure & APIs
-
-| Service | Purpose |
-|---------|---------|
-| **Sepolia Testnet** | Ethereum test network |
-| **Alchemy** | RPC provider & APIs |
-| **Etherscan** | Block explorer & verification |
-| **EntryPoint (v0.6)** | ERC-4337 singleton |
-
----
-
 ## 📚 Learning Resources
 
 ### ERC-4337 & Account Abstraction
@@ -513,16 +510,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## � Authors & Contact
+## 👨‍💻 Author & Contact
 
-### Author
 **Toygun Tezel**
 - 🐙 GitHub: [@Zireaelst](https://github.com/Zireaelst)
 - 📦 Repository: [vinu-digital-task2](https://github.com/Zireaelst/vinu-digital-task2)
-
-### Support
 - 💬 [Open an Issue](https://github.com/Zireaelst/vinu-digital-task2/issues)
-- 📧 Contact through GitHub
 
 ---
 
@@ -579,8 +572,9 @@ npm run lint               # Run linter
 ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 
-**Last Updated:** December 2, 2025  
-**Status:** ✅ Production Ready on Sepolia Testnet
+---
+
+**Status:** ✅ Production Ready | **Network:** Sepolia Testnet | **Last Updated:** December 2025
 
 ⭐ **Star this repo if you find it helpful!** ⭐
 
