@@ -25,7 +25,6 @@
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 - [👨‍💻 Author & Contact](#-author--contact)
-- [🙏 Acknowledgments](#-acknowledgments)
 
 ---
 
@@ -514,25 +513,11 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 👨‍💻 Author & Contact
 
-**Toygun Tezel**
+**Toygun Tez**
 - 🐙 GitHub: [@Zireaelst](https://github.com/Zireaelst)
 - 📦 Repository: [vinu-digital-task2](https://github.com/Zireaelst/vinu-digital-task2)
 - 💬 [Open an Issue](https://github.com/Zireaelst/vinu-digital-task2/issues)
 
----
-
-## 🙏 Acknowledgments
-
-Special thanks to:
-
-- **OpenZeppelin Team** - For battle-tested smart contract libraries
-- **ERC-4337 Team** - For the Account Abstraction standard and reference implementation
-- **Hardhat Team** - For the excellent development framework
-- **Alchemy** - For reliable RPC infrastructure and developer tools
-- **Ethereum Foundation** - For Sepolia testnet and tooling
-- **Next.js Team** - For the amazing React framework
-
----
 
 ## 📊 Project Stats
 
@@ -577,7 +562,5 @@ npm run lint               # Run linter
 ---
 
 **Status:** ✅ Production Ready | **Network:** Sepolia Testnet | **Last Updated:** December 2025
-
-⭐ **Star this repo if you find it helpful!** ⭐
 
 </div>
