@@ -277,10 +277,20 @@ export async function executeTokenTransfer(
     transferData
   ]);
   
-  // Get gas prices
+  // Get gas prices with proper minimums for bundlers
   const feeData = await provider.getFeeData();
-  const maxFeePerGas = feeData.maxFeePerGas || ethers.parseUnits('20', 'gwei');
-  const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas || ethers.parseUnits('2', 'gwei');
+  const networkMaxFeePerGas = feeData.maxFeePerGas || ethers.parseUnits('20', 'gwei');
+  const networkMaxPriorityFeePerGas = feeData.maxPriorityFeePerGas || ethers.parseUnits('2', 'gwei');
+  
+  // Ensure minimum gas prices for bundlers (Alchemy requires at least 0.1 gwei priority fee)
+  const minPriorityFee = ethers.parseUnits('0.1', 'gwei'); // 100000000 wei
+  const maxPriorityFeePerGas = networkMaxPriorityFeePerGas > minPriorityFee 
+    ? networkMaxPriorityFeePerGas 
+    : minPriorityFee;
+  
+  const maxFeePerGas = networkMaxFeePerGas > maxPriorityFeePerGas
+    ? networkMaxFeePerGas
+    : maxPriorityFeePerGas + ethers.parseUnits('1', 'gwei');
   
   console.log('⛽ Gas prices:', {
     maxFeePerGas: ethers.formatUnits(maxFeePerGas, 'gwei'),
@@ -306,7 +316,7 @@ export async function executeTokenTransfer(
     callData: executeData,
     callGasLimit: '0x30d40', // 200000 in hex with 0x prefix
     verificationGasLimit: '0x61a80', // 400000 in hex
-    preVerificationGas: '0xc350', // 50000 in hex
+    preVerificationGas: '0xc738', // 51000 in hex (increased from 50000 to meet bundler requirements)
     maxFeePerGas: '0x' + maxFeePerGas.toString(16),
     maxPriorityFeePerGas: '0x' + maxPriorityFeePerGas.toString(16),
     paymasterAndData: paymasterAndData, // Paymaster will sponsor gas
@@ -324,7 +334,7 @@ export async function executeTokenTransfer(
   // These values are sufficient for: account validation + paymaster validation + token transfer
   userOp.callGasLimit = '0x493e0'; // 300000 gas
   userOp.verificationGasLimit = '0x7a120'; // 500000 gas  
-  userOp.preVerificationGas = '0x186a0'; // 100000 gas
+  userOp.preVerificationGas = '0x186f8'; // 100088 gas (increased from 100000 to ensure sufficient for bundlers)
   
   console.log('Gas limits:', {
     callGasLimit: parseInt(userOp.callGasLimit, 16),
@@ -409,10 +419,20 @@ export async function buildTokenTransferUserOp(
     transferData
   ]);
   
-  // Get gas prices
+  // Get gas prices with proper minimums for bundlers
   const feeData = await provider.getFeeData();
-  const maxFeePerGas = feeData.maxFeePerGas || ethers.parseUnits('20', 'gwei');
-  const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas || ethers.parseUnits('2', 'gwei');
+  const networkMaxFeePerGas = feeData.maxFeePerGas || ethers.parseUnits('20', 'gwei');
+  const networkMaxPriorityFeePerGas = feeData.maxPriorityFeePerGas || ethers.parseUnits('2', 'gwei');
+  
+  // Ensure minimum gas prices for bundlers (Alchemy requires at least 0.1 gwei priority fee)
+  const minPriorityFee = ethers.parseUnits('0.1', 'gwei'); // 100000000 wei
+  const maxPriorityFeePerGas = networkMaxPriorityFeePerGas > minPriorityFee 
+    ? networkMaxPriorityFeePerGas 
+    : minPriorityFee;
+  
+  const maxFeePerGas = networkMaxFeePerGas > maxPriorityFeePerGas
+    ? networkMaxFeePerGas
+    : maxPriorityFeePerGas + ethers.parseUnits('1', 'gwei');
   
   // Build UserOp
   const userOp: UserOperation = {
@@ -422,7 +442,7 @@ export async function buildTokenTransferUserOp(
     callData: executeData,
     callGasLimit: '0x30d40', // 200000 in hex
     verificationGasLimit: '0x61a80', // 400000 in hex
-    preVerificationGas: '0xc350', // 50000 in hex
+    preVerificationGas: '0xc738', // 51000 in hex (increased to meet bundler requirements)
     maxFeePerGas: '0x' + maxFeePerGas.toString(16),
     maxPriorityFeePerGas: '0x' + maxPriorityFeePerGas.toString(16),
     paymasterAndData: CONTRACT_ADDRESSES.sponsorPaymaster,

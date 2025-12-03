@@ -446,17 +446,27 @@ export async function buildBatchTransferUserOp(
     callDatas
   ]);
   
-  // Get gas prices
+  // Get gas prices with proper minimums for bundlers
   const feeData = await provider.getFeeData();
-  const maxFeePerGas = feeData.maxFeePerGas || ethers.parseUnits('20', 'gwei');
-  const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas || ethers.parseUnits('2', 'gwei');
+  const networkMaxFeePerGas = feeData.maxFeePerGas || ethers.parseUnits('20', 'gwei');
+  const networkMaxPriorityFeePerGas = feeData.maxPriorityFeePerGas || ethers.parseUnits('2', 'gwei');
+  
+  // Ensure minimum gas prices for bundlers (Alchemy requires at least 0.1 gwei priority fee)
+  const minPriorityFee = ethers.parseUnits('0.1', 'gwei'); // 100000000 wei
+  const maxPriorityFeePerGas = networkMaxPriorityFeePerGas > minPriorityFee 
+    ? networkMaxPriorityFeePerGas 
+    : minPriorityFee;
+  
+  const maxFeePerGas = networkMaxFeePerGas > maxPriorityFeePerGas
+    ? networkMaxFeePerGas
+    : maxPriorityFeePerGas + ethers.parseUnits('1', 'gwei');
   
   // Calculate gas limits (scaled for batch operations)
   const baseGas = 100000;
   const perTransferGas = 80000;
   const totalCallGas = baseGas + (perTransferGas * recipients.length);
   
-  // Build UserOp
+  // Build UserOp with proper gas values
   const userOp: UserOperation = {
     sender: accountAddress,
     nonce: '0x' + nonce.toString(16),
@@ -464,7 +474,7 @@ export async function buildBatchTransferUserOp(
     callData: executeBatchData,
     callGasLimit: '0x' + totalCallGas.toString(16),
     verificationGasLimit: '0x' + (300000).toString(16),
-    preVerificationGas: '0x' + (50000).toString(16),
+    preVerificationGas: '0x' + (51000).toString(16), // Increased from 50000 to 51000 to meet Pimlico requirements
     maxFeePerGas: '0x' + maxFeePerGas.toString(16),
     maxPriorityFeePerGas: '0x' + maxPriorityFeePerGas.toString(16),
     paymasterAndData: CONTRACT_ADDRESSES.sponsorPaymaster,
