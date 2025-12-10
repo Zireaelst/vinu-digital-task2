@@ -178,10 +178,37 @@ async function main() {
   console.log(`   To: ${recipientWallet.address}`);
   console.log(`   Amount: ${ethers.formatEther(transferAmount)} TEST`);
   
-  // Get gas prices
-  const feeData = await ethers.provider.getFeeData();
-  const maxFeePerGas = feeData.maxFeePerGas || ethers.parseUnits("20", "gwei");
-  const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas || ethers.parseUnits("2", "gwei");
+  // Get bundler-specific gas prices
+  console.log(chalk.cyan(`\n⛽ Fetching bundler gas prices...`));
+  const bundlerClient = new BundlerClient();
+  
+  let maxFeePerGas: bigint;
+  let maxPriorityFeePerGas: bigint;
+  
+  try {
+    const bundlerGasPrice = await bundlerClient.getUserOperationGasPrice();
+    maxFeePerGas = BigInt(bundlerGasPrice.maxFeePerGas);
+    maxPriorityFeePerGas = BigInt(bundlerGasPrice.maxPriorityFeePerGas);
+    console.log(chalk.green(`✅ Using bundler-specific gas prices`));
+  } catch (error) {
+    // Fallback to higher network gas prices with safety multipliers
+    const feeData = await ethers.provider.getFeeData();
+    const networkMaxFee = feeData.maxFeePerGas || ethers.parseUnits("20", "gwei");
+    const networkPriorityFee = feeData.maxPriorityFeePerGas || ethers.parseUnits("2", "gwei");
+    
+    // Apply 3x multiplier for bundler requirements
+    maxFeePerGas = networkMaxFee * 3n;
+    maxPriorityFeePerGas = networkPriorityFee * 10n; // Higher multiplier for priority fee
+    
+    // Ensure minimum requirements based on error messages
+    const minMaxFee = ethers.parseUnits("1.2", "gwei"); // Above Pimlico's 1.1 gwei requirement
+    const minPriorityFee = ethers.parseUnits("0.15", "gwei"); // Above Alchemy's 0.1 gwei requirement
+    
+    if (maxFeePerGas < minMaxFee) maxFeePerGas = minMaxFee;
+    if (maxPriorityFeePerGas < minPriorityFee) maxPriorityFeePerGas = minPriorityFee;
+    
+    console.log(chalk.yellow(`⚠️  Using fallback gas prices with safety multipliers`));
+  }
   
   console.log(chalk.cyan(`\n⛽ Gas Prices:`));
   console.log(`   Max Fee: ${ethers.formatUnits(maxFeePerGas, "gwei")} gwei`);
@@ -258,8 +285,7 @@ async function main() {
   console.log(chalk.blue("=".repeat(80)));
   
   try {
-    // Create bundler client
-    const bundlerClient = new BundlerClient();
+    // Use existing bundler client
     
     // Send UserOperation to bundler
     const submittedUserOpHash = await bundlerClient.sendUserOperation(userOp, ENTRYPOINT_ADDRESS);

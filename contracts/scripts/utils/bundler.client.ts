@@ -272,6 +272,41 @@ export class BundlerClient {
   async getChainId(): Promise<string> {
     return await this.makeRpcCall('eth_chainId', []);
   }
+
+  /**
+   * Get bundler-specific gas prices for UserOperations
+   */
+  async getUserOperationGasPrice(): Promise<{
+    maxFeePerGas: string;
+    maxPriorityFeePerGas: string;
+  }> {
+    try {
+      // Try Pimlico-specific method first
+      const pimlicoGasPrice = await this.makeRpcCall('pimlico_getUserOperationGasPrice', []);
+      return pimlicoGasPrice;
+    } catch (error) {
+      try {
+        // Try Stackup-specific method
+        const stackupGasPrice = await this.makeRpcCall('stackup_getUserOperationGasPrice', []);
+        return stackupGasPrice;
+      } catch (error) {
+        try {
+          // Try generic method
+          const genericGasPrice = await this.makeRpcCall('eth_getUserOperationGasPrice', []);
+          return genericGasPrice;
+        } catch (error) {
+          // Fallback to network gas prices with higher multipliers for bundler requirements
+          console.log(chalk.yellow('⚠️  Bundler gas price API not available, using fallback...'));
+          
+          // Use significantly higher gas prices as fallback
+          return {
+            maxFeePerGas: '0x' + (2000000000n).toString(16), // 2 gwei minimum
+            maxPriorityFeePerGas: '0x' + (1500000000n).toString(16) // 1.5 gwei minimum
+          };
+        }
+      }
+    }
+  }
 }
 
 /**
